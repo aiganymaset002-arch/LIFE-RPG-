@@ -121,7 +121,7 @@ struct MapView: View {
     }
 }
 
-/// Извилистая тропа: снизу Точка А, сверху замок Точки Б.
+/// Извилистая тропа: снизу Точка А, сверху замок Точки Б. Каждый узел — строка стека (надёжная прокрутка).
 struct TrailView: View {
     @EnvironmentObject private var store: RPGStore
     let roadmap: Roadmap
@@ -135,122 +135,100 @@ struct TrailView: View {
     private let bottomPad: CGFloat = 170
 
     var body: some View {
-        GeometryReader { g in
-            let width = g.size.width
-            let pts = points(width: width)
-            ZStack {
-                // дорожка
-                Path { p in
-                    guard let first = pts.first else { return }
-                    p.move(to: first)
-                    for i in 1..<Swift.max(1, pts.count) {
-                        let a = pts[i - 1], b = pts[i]
-                        p.addCurve(to: b, control1: CGPoint(x: a.x, y: (a.y + b.y) / 2), control2: CGPoint(x: b.x, y: (a.y + b.y) / 2))
-                    }
-                }
-                .stroke(Color(hex: "1A0E33").opacity(0.8), style: StrokeStyle(lineWidth: 26, lineCap: .round))
-                Path { p in
-                    guard let first = pts.first else { return }
-                    p.move(to: first)
-                    for i in 1..<Swift.max(1, pts.count) {
-                        let a = pts[i - 1], b = pts[i]
-                        p.addCurve(to: b, control1: CGPoint(x: a.x, y: (a.y + b.y) / 2), control2: CGPoint(x: b.x, y: (a.y + b.y) / 2))
-                    }
-                }
-                .stroke(LinearGradient(colors: [Color(hex: "C9A86A"), Color(hex: "8A6A3A")], startPoint: .top, endPoint: .bottom), style: StrokeStyle(lineWidth: 16, lineCap: .round))
-                Path { p in
-                    guard let first = pts.first else { return }
-                    p.move(to: first)
-                    for i in 1..<Swift.max(1, pts.count) {
-                        let a = pts[i - 1], b = pts[i]
-                        p.addCurve(to: b, control1: CGPoint(x: a.x, y: (a.y + b.y) / 2), control2: CGPoint(x: b.x, y: (a.y + b.y) / 2))
-                    }
-                }
-                .stroke(Color(hex: "FFF0C0").opacity(0.7), style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [2, 12]))
-
-                // Точка Б — замок
-                VStack(spacing: 6) {
-                    Text("🏰").font(.system(size: 64)).shadow(color: RPGTheme.goldLight.opacity(0.8), radius: 16)
-                    VStack(spacing: 3) {
-                        GameLabel(text: "Точка Б · день \(roadmap.days)", size: 13, color: RPGTheme.gold)
-                        if let b = roadmap.pointB {
-                            Text(b.prefix(4).joined(separator: " · ")).font(GameFont.body(11, .bold)).foregroundStyle(RPGTheme.cream).multilineTextAlignment(.center).lineLimit(3)
-                        } else {
-                            Text(roadmap.dream.isEmpty ? roadmap.title : roadmap.dream).font(GameFont.body(11, .bold)).foregroundStyle(RPGTheme.cream).multilineTextAlignment(.center).lineLimit(3)
-                        }
-                    }
-                    .padding(10)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(Color(hex: "1A1032").opacity(0.9)))
-                    .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(RPGTheme.goldGradient, lineWidth: 1.5))
-                    .frame(maxWidth: 260)
-                }
-                .position(x: width / 2, y: 110)
-
-                // Неделя-указатели
-                ForEach(Array(quests.enumerated()), id: \.element.id) { i, q in
-                    if let label = weekLabel(i) {
-                        Text(label)
-                            .font(GameFont.display(10))
-                            .foregroundStyle(RPGTheme.cream)
-                            .outlined(RPGTheme.edgeDark, 0.8)
-                            .padding(.horizontal, 8).padding(.vertical, 4)
-                            .background(Capsule().fill(LinearGradient(colors: [Color(hex: "8A5A2A"), Color(hex: "5A3A1A")], startPoint: .top, endPoint: .bottom)))
-                            .overlay(Capsule().strokeBorder(RPGTheme.goldGradient, lineWidth: 1))
-                            .position(x: pts[i].x < width / 2 ? width - 56 : 56, y: pts[i].y + 4)
-                    }
-                }
-
-                // Узлы
-                ForEach(Array(quests.enumerated()), id: \.element.id) { i, q in
-                    Button { store.open(.quest(q.id)) } label: {
-                        TrailNode(quest: q, isCurrent: q.id == currentId, locked: store.state.isLocked(q), pulse: pulse)
-                    }
-                    .buttonStyle(.plain)
-                    .position(pts[i])
-                }
-
-                // Точка А
-                VStack(spacing: 4) {
-                    Text("🚩").font(.system(size: 34))
-                    GameLabel(text: "Точка А · старт", size: 12, color: RPGTheme.gold)
-                    if let a = roadmap.pointA {
-                        Text(a).font(GameFont.body(11, .medium)).foregroundStyle(RPGTheme.muted).multilineTextAlignment(.center).lineLimit(3).frame(maxWidth: 260)
-                    }
-                }
-                .position(x: width / 2, y: height - 70)
-            }
-        }
-        .frame(height: height)
-        .overlay(alignment: .top) { anchors }
-    }
-
-    /// Невидимые якоря на высоте каждого узла — для прокрутки к текущему квесту.
-    private var anchors: some View {
         VStack(spacing: 0) {
-            Color.clear.frame(height: top + step / 2)
-            ForEach(quests.reversed()) { q in
-                Color.clear.frame(height: step).id(q.id)
+            castle.frame(height: top)
+            ForEach(Array(quests.enumerated().reversed()), id: \.element.id) { i, q in
+                row(i, q).frame(height: step).id(q.id)
             }
+            pointA.frame(height: bottomPad)
         }
-        .allowsHitTesting(false)
+        .background(GeometryReader { g in trail(width: g.size.width) })
     }
 
-    private var height: CGFloat { top + CGFloat(Swift.max(1, quests.count)) * step + bottomPad }
+    // Точка Б — замок
+    private var castle: some View {
+        VStack(spacing: 6) {
+            Text("🏰").font(.system(size: 64)).shadow(color: RPGTheme.goldLight.opacity(0.8), radius: 16)
+            VStack(spacing: 3) {
+                GameLabel(text: "Точка Б · день \(roadmap.days)", size: 13, color: RPGTheme.gold)
+                Text(roadmap.pointB.map { $0.prefix(4).joined(separator: " · ") } ?? (roadmap.dream.isEmpty ? roadmap.title : roadmap.dream))
+                    .font(GameFont.body(11, .bold)).foregroundStyle(RPGTheme.cream).multilineTextAlignment(.center).lineLimit(3)
+            }
+            .padding(10)
+            .background(RoundedRectangle(cornerRadius: 12).fill(Color(hex: "1A1032").opacity(0.9)))
+            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(RPGTheme.goldGradient, lineWidth: 1.5))
+            .frame(maxWidth: 260)
+        }
+        .frame(maxWidth: .infinity)
+    }
 
-    /// Точки узлов: первый квест внизу, последний вверху; змейка.
+    private var pointA: some View {
+        VStack(spacing: 4) {
+            Text("🚩").font(.system(size: 34))
+            GameLabel(text: "Точка А · старт", size: 12, color: RPGTheme.gold)
+            if let a = roadmap.pointA {
+                Text(a).font(GameFont.body(11, .medium)).foregroundStyle(RPGTheme.muted).multilineTextAlignment(.center).lineLimit(3).frame(maxWidth: 260)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 50)
+    }
+
+    private func row(_ i: Int, _ q: Quest) -> some View {
+        GeometryReader { g in
+            let x = nodeX(i, width: g.size.width)
+            ZStack {
+                if let label = weekLabel(i) {
+                    Text(label)
+                        .font(GameFont.display(10))
+                        .foregroundStyle(RPGTheme.cream)
+                        .outlined(RPGTheme.edgeDark, 0.8)
+                        .padding(.horizontal, 8).padding(.vertical, 4)
+                        .background(Capsule().fill(LinearGradient(colors: [Color(hex: "8A5A2A"), Color(hex: "5A3A1A")], startPoint: .top, endPoint: .bottom)))
+                        .overlay(Capsule().strokeBorder(RPGTheme.goldGradient, lineWidth: 1))
+                        .position(x: x < g.size.width / 2 ? g.size.width - 56 : 56, y: step / 2 + 4)
+                }
+                Button { store.open(.quest(q.id)) } label: {
+                    TrailNode(quest: q, isCurrent: q.id == currentId, locked: store.state.isLocked(q), pulse: pulse)
+                }
+                .buttonStyle(.plain)
+                .position(x: x, y: step / 2)
+            }
+        }
+    }
+
+    private func nodeX(_ i: Int, width: CGFloat) -> CGFloat {
+        width / 2 + width * 0.27 * CGFloat(sin(Double(i) * 1.15))
+    }
+
+    /// Центры узлов в координатах всей тропы.
     private func points(width: CGFloat) -> [CGPoint] {
-        let amp = width * 0.27
+        let n = quests.count
         return quests.indices.map { i in
-            let y = height - bottomPad - CGFloat(i) * step
-            let x = width / 2 + amp * CGFloat(sin(Double(i) * 1.15))
-            return CGPoint(x: x, y: y)
+            CGPoint(x: nodeX(i, width: width), y: top + CGFloat(n - 1 - i) * step + step / 2)
+        }
+    }
+
+    private func trail(width: CGFloat) -> some View {
+        let pts = points(width: width)
+        let path = Path { p in
+            guard let first = pts.first else { return }
+            p.move(to: first)
+            for i in 1..<Swift.max(1, pts.count) {
+                let a = pts[i - 1], b = pts[i]
+                p.addCurve(to: b, control1: CGPoint(x: a.x, y: (a.y + b.y) / 2), control2: CGPoint(x: b.x, y: (a.y + b.y) / 2))
+            }
+        }
+        return ZStack {
+            path.stroke(Color(hex: "1A0E33").opacity(0.8), style: StrokeStyle(lineWidth: 26, lineCap: .round))
+            path.stroke(LinearGradient(colors: [Color(hex: "C9A86A"), Color(hex: "8A6A3A")], startPoint: .top, endPoint: .bottom), style: StrokeStyle(lineWidth: 16, lineCap: .round))
+            path.stroke(Color(hex: "FFF0C0").opacity(0.7), style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [2, 12]))
         }
     }
 
     private func weekLabel(_ i: Int) -> String? {
         let seg = roadmap.days <= 120 ? 7 : 30
-        let d = (quests[i].day ?? 1) - 1
-        let cur = d / seg
+        let cur = ((quests[i].day ?? 1) - 1) / seg
         let prev = i == 0 ? -1 : ((quests[i - 1].day ?? 1) - 1) / seg
         guard cur != prev else { return nil }
         return seg == 7 ? "НЕДЕЛЯ \(cur + 1)" : "МЕСЯЦ \(cur + 1)"
