@@ -5,8 +5,34 @@
 
 LIFE RPG — мобильное приложение для геймификации реальной жизни. У каждого игрока есть профиль, ранг, XP, направления развития, миры, дорожные карты и достижения. **XP начисляется только за реальные результаты** — не за время в приложении.
 
-📱 **Открыть приложение:** https://aiganymaset002-arch.github.io/life-rpg-/
+🌐 **Веб-версия:** https://aiganymaset002-arch.github.io/life-rpg-/
 На телефоне: открой ссылку → «Поделиться» → **«На экран Домой»** (iPhone) или «Установить приложение» (Android). Работает как обычное приложение, в том числе без интернета.
+
+## 📱 iOS-приложение (SwiftUI, как KKSU)
+
+Нативное приложение для iPhone и iPad: **`LifeRPG.xcodeproj`**.
+
+1. Откройте **`LifeRPG.xcodeproj`** в Xcode 16 или новее (iOS 17+). Все файлы уже подключены.
+2. Выберите симулятор iPhone и нажмите **Run (▶︎)**.
+3. Чтобы поставить на свой iPhone: подключите телефон, выберите его вверху, в **Signing & Capabilities** выберите свою команду (Apple ID) и нажмите Run.
+
+При каждом изменении GitHub Actions собирает приложение на Mac и прогоняет проверки игрового ядра (вкладка **Actions → iOS app**).
+
+| Старт | Главная | Карта 90 дней |
+|---|---|---|
+| ![](docs/screenshots/0-start.png) | ![](docs/screenshots/demo-home.png) | ![](docs/screenshots/demo-map.png) |
+| **Game Master** | **Миры** | **Профиль** |
+| ![](docs/screenshots/demo-gm.png) | ![](docs/screenshots/demo-worlds.png) | ![](docs/screenshots/demo-profile.png) |
+
+```
+LifeRPG.xcodeproj        проект Xcode — откройте его и нажмите Run
+LifeRPG/App              точка входа приложения
+LifeRPG/Core             модели, игровое ядро, AI Game Master, демо, хранилище, тема
+LifeRPG/Features         экраны: онбординг, главная (Kids/SEN), карта, квест, Game Master, миры, профиль, ранги
+LifeRPG/Assets.xcassets  иконка приложения
+Tests/CoreCheck          проверки игрового ядра
+scripts/gen_xcodeproj.py пересобрать проект после добавления новых .swift файлов
+```
 
 ---
 

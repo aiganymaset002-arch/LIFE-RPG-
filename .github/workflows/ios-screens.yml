@@ -2,9 +2,6 @@ name: iOS screenshots
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths: ["LifeRPG/**", ".github/workflows/ios-screens.yml"]
 
 permissions:
   contents: write
