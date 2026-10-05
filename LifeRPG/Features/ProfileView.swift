@@ -2,8 +2,8 @@
 //  ProfileView.swift
 //  LIFE RPG
 //
-//  Профиль: результат, итоговая шкала уровней, следующий уровень, достижения,
-//  результаты по направлениям, настройки, экспорт/импорт. Экран рангов E → SSS.
+//  Герой: портрет, щит ранга, общий и Verified XP, шкала E → SSS, следующий уровень, достижения,
+//  результаты по направлениям. Зал рангов. Панель настроек (аватар, режим, переключатели, экспорт/импорт).
 //
 
 import SwiftUI
@@ -11,231 +11,283 @@ import UniformTypeIdentifiers
 
 struct ProfileView: View {
     @EnvironmentObject private var store: RPGStore
+    @State private var showRanks = false
+
+    var body: some View {
+        if showRanks {
+            RanksView { showRanks = false }
+        } else {
+            hero
+        }
+    }
+
+    private var hero: some View {
+        let s = store.state
+        let p = s.playerRank()
+        let xp = s.playerXP()
+        let scale = RPGData.ranks(s.playerScale)
+        let cx = s.categoryXP()
+        let done = s.quests.filter(\.isDone)
+        let grouped = Dictionary(grouping: done) { $0.mainAward?.cat ?? "growth" }
+        let order = grouped.keys.sorted { (cx[$0] ?? 0) > (cx[$1] ?? 0) }
+        return ScrollView(showsIndicators: false) {
+            VStack(spacing: 14) {
+                ScreenHeader(title: "Герой")
+                OrnatePanel {
+                    HStack(spacing: 14) {
+                        AvatarMedallion(avatar: store.avatar, size: 96)
+                        VStack(alignment: .leading, spacing: 4) {
+                            GameLabel(text: s.profile?.name ?? "", size: 22)
+                            Text([s.profile?.age.map { "Возраст: \($0)" }, s.profile?.location].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "))
+                                .font(GameFont.body(12, .medium)).foregroundStyle(RPGTheme.muted)
+                            Text("RPG уровень").font(GameFont.body(12, .bold)).foregroundStyle(RPGTheme.muted)
+                            GameLabel(text: "\(p.rank.id) · \(p.rank.name)", size: 17, color: RPGTheme.rankAccent(p.rank.id))
+                        }
+                        Spacer(minLength: 0)
+                        Button { showRanks = true } label: { RankShield(id: p.rank.id, size: 60) }
+                            .buttonStyle(.plain)
+                    }
+                    InsetCard(stroke: RPGTheme.gold.opacity(0.6)) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("РЕЗУЛЬТАТ · ОБЩИЙ XP").font(GameFont.display(10)).foregroundStyle(RPGTheme.muted)
+                                GameLabel(text: "\(RPGFormat.xp(xp)) \(store.unit)", size: 32, color: RPGTheme.gold)
+                                Text("Verified \(RPGFormat.xp(s.playerXP(verifiedOnly: true))) ✓ · \(done.count) результатов").font(GameFont.body(12, .bold)).foregroundStyle(RPGTheme.ok)
+                            }
+                            Spacer()
+                            Text("🏆").font(.system(size: 50)).shadow(color: RPGTheme.gold.opacity(0.6), radius: 12)
+                        }
+                    }
+                    GameBar(progress: p.progress, height: 18, label: p.next.map { "До ранга \($0.id) · \(RPGFormat.xp(p.toNext)) XP" } ?? "Максимальный ранг")
+                }
+
+                OrnatePanel(title: "Шкала уровней") {
+                    HStack(spacing: 2) {
+                        ForEach(scale) { r in
+                            VStack(spacing: 3) {
+                                RankShield(id: r.id, size: r.id == p.rank.id ? 38 : 28)
+                                Text(compact(r.min)).font(GameFont.display(8)).foregroundStyle(r.id == p.rank.id ? RPGTheme.gold : RPGTheme.muted)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .opacity(r.min <= xp ? 1 : 0.55)
+                        }
+                    }
+                    Button("Все ранги →") { showRanks = true }.buttonStyle(ChunkyButtonStyle(kind: .purple, size: 14))
+                }
+                .padding(.top, 8)
+
+                OrnatePanel(title: "Достижения") {
+                    AchievementGrid(items: s.achievements)
+                }
+                .padding(.top, 8)
+
+                OrnatePanel(title: "Результаты") {
+                    ForEach(order, id: \.self) { c in
+                        let qs = grouped[c] ?? []
+                        DisclosureGroup {
+                            VStack(spacing: 2) {
+                                ForEach(qs) { q in
+                                    Button { store.open(.quest(q.id)) } label: {
+                                        HStack(alignment: .top) {
+                                            Text(s.isVerified(q) ? "✓" : "·").font(GameFont.display(12)).foregroundStyle(RPGTheme.ok)
+                                            Text(q.title).font(GameFont.body(13, .semibold)).foregroundStyle(RPGTheme.cream).multilineTextAlignment(.leading)
+                                            Spacer()
+                                            Text("+\(RPGFormat.xp(s.questXP(q)))").font(GameFont.display(12)).foregroundStyle(RPGTheme.gold)
+                                        }
+                                        .padding(.vertical, 5)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        } label: {
+                            HStack(spacing: 8) {
+                                Text(RPGData.category(c).emoji).font(.system(size: 20))
+                                Text(RPGData.category(c).label).font(GameFont.body(14, .bold)).foregroundStyle(RPGTheme.cream)
+                                Spacer()
+                                Text(RPGFormat.xp(qs.reduce(0) { $0 + s.questXP($1) })).font(GameFont.display(13)).foregroundStyle(RPGTheme.gold)
+                            }
+                        }
+                        .tint(RPGTheme.gold)
+                        .padding(10)
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Color(hex: "1A1032")))
+                        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.black.opacity(0.5), lineWidth: 1.5))
+                    }
+                }
+                .padding(.top, 8)
+
+                Text("You don’t play a character. You build yourself.\nYou don’t build a virtual empire. You build a real one.")
+                    .font(GameFont.title(14)).foregroundStyle(RPGTheme.muted).multilineTextAlignment(.center).padding(.top, 6)
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 24)
+        }
+    }
+
+    private func compact(_ n: Int) -> String { n >= 1000 ? "\(n / 1000)k" : "\(n)" }
+}
+
+// MARK: - Зал рангов
+
+struct RanksView: View {
+    @EnvironmentObject private var store: RPGStore
+    let back: () -> Void
+
+    var body: some View {
+        let current = store.state.playerRank().rank.id
+        let list = RPGData.personRanks
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 14) {
+                ScreenHeader(title: "Зал рангов", back: back)
+                Text("Твоя жизнь — твоя игра. Прокачивай себя к легенде.")
+                    .font(GameFont.title(16)).foregroundStyle(RPGTheme.gold).multilineTextAlignment(.center)
+                ForEach(Array(list.enumerated()), id: \.offset) { i, r in
+                    let info = RPGData.rankInfo[r.id]
+                    let next: RankDef? = i + 1 < list.count ? list[i + 1] : nil
+                    OrnatePanel {
+                        HStack(spacing: 14) {
+                            RankShield(id: r.id, size: 58)
+                            VStack(alignment: .leading, spacing: 3) {
+                                GameLabel(text: r.name, size: 19, color: RPGTheme.rankAccent(r.id))
+                                Text("\(RPGFormat.xp(r.min))\(next.map { "–" + RPGFormat.xp($0.min - 1) } ?? "+") XP").font(GameFont.display(12)).foregroundStyle(RPGTheme.muted)
+                            }
+                            Spacer()
+                            if r.id == current {
+                                Text("ТЫ ЗДЕСЬ").font(GameFont.display(10)).foregroundStyle(.white)
+                                    .padding(.horizontal, 8).padding(.vertical, 5)
+                                    .background(Capsule().fill(RPGTheme.xpGradient))
+                                    .overlay(Capsule().strokeBorder(RPGTheme.goldGradient, lineWidth: 1))
+                            }
+                        }
+                        if let info {
+                            Text("Цель: \(info.goal)").font(GameFont.body(14, .heavy)).foregroundStyle(RPGTheme.rankAccent(r.id))
+                            VStack(alignment: .leading, spacing: 3) {
+                                ForEach(info.needs, id: \.self) { n in
+                                    HStack(alignment: .top, spacing: 6) {
+                                        Image(systemName: "diamond.fill").font(.system(size: 7)).foregroundStyle(RPGTheme.gold).padding(.top, 5)
+                                        Text(n).font(GameFont.body(13, .medium)).foregroundStyle(RPGTheme.cream)
+                                    }
+                                }
+                            }
+                            Text(info.motto).font(GameFont.title(13)).foregroundStyle(RPGTheme.muted)
+                        }
+                    }
+                    .shadow(color: r.id == current ? RPGTheme.violet.opacity(0.6) : .clear, radius: 14)
+                }
+                OrnatePanel(title: "Как получать XP") {
+                    ForEach(RPGData.xpTiers) { t in
+                        HStack {
+                            Text(t.label).font(GameFont.body(13, .semibold)).foregroundStyle(RPGTheme.cream)
+                            Spacer()
+                            Text("+\(RPGFormat.xp(t.min))–\(RPGFormat.xp(t.max))").font(GameFont.display(12)).foregroundStyle(RPGTheme.gold)
+                        }
+                        .padding(.vertical, 2)
+                    }
+                    Text("Свои критерии и веса можно создавать — они входят в Total XP, но не в Verified XP. Verified XP подтверждается сертификатами, GitHub, публикациями, дипломами, ссылками и портфолио.")
+                        .font(GameFont.body(12, .medium)).foregroundStyle(RPGTheme.muted)
+                }
+                .padding(.top, 8)
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 24)
+        }
+    }
+}
+
+// MARK: - Настройки
+
+struct SettingsPanel: View {
+    @EnvironmentObject private var store: RPGStore
     @State private var name = ""
     @State private var age = ""
     @State private var location = ""
     @State private var mode: GameMode = .life
+    @State private var avatar = "AvatarLeopard"
     @State private var calm = false
     @State private var parent = false
-    @State private var openQuest: QuestRef?
-    @State private var showAdd = false
+    @State private var haptics = true
     @State private var importing = false
     @State private var confirmReset = false
     @State private var exportURL: URL?
 
+    private struct AvatarChoice: Identifiable { let id: String; let title: String }
+    private let avatars = [AvatarChoice(id: "AvatarLeopard", title: "Барс"), AvatarChoice(id: "AvatarGirl", title: "Девочка"), AvatarChoice(id: "AvatarBoy", title: "Мальчик")]
+
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            RPGScreen(title: "Профиль") {
-                summary
-                achievementsAndGroups
-                settings
+        OrnatePanel(title: "Настройки", onClose: { store.panel = nil }) {
+            HStack(spacing: 10) {
+                ForEach(avatars) { a in
+                    Button { avatar = a.id } label: {
+                        VStack(spacing: 6) {
+                            Image(a.id).resizable().scaledToFill()
+                                .frame(width: 78, height: 78)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(avatar == a.id ? AnyShapeStyle(RPGTheme.goldGradient) : AnyShapeStyle(RPGTheme.edgeDark), lineWidth: avatar == a.id ? 4 : 2))
+                                .shadow(color: avatar == a.id ? RPGTheme.gold.opacity(0.6) : .clear, radius: 8)
+                            HStack(spacing: 6) {
+                                Text(a.title).font(GameFont.title(14)).foregroundStyle(RPGTheme.cream)
+                                CheckStone(on: avatar == a.id)
+                            }
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .frame(maxWidth: .infinity)
+                }
             }
-            AddButton { showAdd = true }
+
+            GameField(title: "Имя", text: $name)
+            HStack(spacing: 10) {
+                GameField(title: "Возраст", text: $age, keyboard: .numberPad)
+                GameField(title: "Город", text: $location)
+            }
+            Text("Режим").font(GameFont.body(13, .bold)).foregroundStyle(RPGTheme.muted)
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                ForEach(GameMode.allCases) { m in
+                    Button { mode = m } label: { StoneChip(text: "\(m.emoji) \(m.label.replacingOccurrences(of: " MODE", with: ""))", selected: mode == m).frame(maxWidth: .infinity) }
+                        .buttonStyle(.plain)
+                }
+            }
+            GameToggle(title: "Спокойный экран", icon: "leaf.fill", isOn: $calm)
+            GameToggle(title: "Подтверждение родителем", icon: "person.2.fill", isOn: $parent)
+            GameToggle(title: "Вибрация", icon: "iphone.radiowaves.left.and.right", isOn: $haptics)
+
+            Button("Сохранить") {
+                store.setAvatar(avatar)
+                store.setHaptics(haptics)
+                store.updateProfile(name: name.trimmingCharacters(in: .whitespaces), age: Int(age), location: location, mode: mode, calm: calm, parentConfirm: parent)
+                store.panel = nil
+            }
+            .buttonStyle(ChunkyButtonStyle(kind: .gold, size: 22))
+
+            HStack(spacing: 10) {
+                if let exportURL {
+                    ShareLink(item: exportURL) { Text("Экспорт") }.buttonStyle(ChunkyButtonStyle(kind: .cyan, size: 14))
+                }
+                Button("Импорт") { importing = true }.buttonStyle(ChunkyButtonStyle(kind: .cyan, size: 14))
+                Button("Сброс") { confirmReset = true }.buttonStyle(ChunkyButtonStyle(kind: .red, size: 14))
+            }
         }
-        .sheet(item: $openQuest) { ref in QuestDetailView(questId: ref.id) }
-        .sheet(isPresented: $showAdd) { AddResultView() }
+        .onAppear(perform: load)
         .fileImporter(isPresented: $importing, allowedContentTypes: [.json]) { result in
             if case .success(let url) = result {
                 store.show(store.importFile(url) ? "Игра загружена" : "Не удалось прочитать файл")
+                store.panel = nil
             }
         }
-        .onAppear(perform: loadSettings)
+        .confirmationDialog("Стереть игру и начать заново?", isPresented: $confirmReset, titleVisibility: .visible) {
+            Button("Стереть", role: .destructive) { store.panel = nil; store.reset() }
+        }
     }
 
-    private func loadSettings() {
+    private func load() {
         guard let p = store.state.profile else { return }
         name = p.name
         age = p.age.map { String($0) } ?? ""
         location = p.location
         mode = p.mode
+        avatar = store.avatar
         calm = store.state.settings.calm
         parent = store.state.settings.parentConfirm
+        haptics = store.haptics
         exportURL = store.exportFile()
-    }
-
-    @ViewBuilder
-    private var summary: some View {
-        let s = store.state
-        let p = s.playerRank()
-        let xp = s.playerXP()
-        let scale = RPGData.ranks(s.playerScale)
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("РЕЗУЛЬТАТ · Общий XP").font(.system(size: 12, weight: .semibold)).foregroundStyle(RPGTheme.muted)
-                (Text(RPGFormat.xp(xp)).font(.system(size: 38, weight: .heavy)).foregroundColor(RPGTheme.gold)
-                    + Text(" \(store.unit)").font(.system(size: 16, weight: .semibold)).foregroundColor(RPGTheme.muted))
-                Text("Verified \(RPGFormat.xp(s.playerXP(verifiedOnly: true))) ✓ · \(s.quests.filter(\.isDone).count) результатов")
-                    .font(.system(size: 12.5)).foregroundStyle(RPGTheme.muted)
-            }
-            Spacer()
-            Text("🏆").font(.system(size: 56)).shadow(color: RPGTheme.gold.opacity(0.55), radius: 16)
-        }
-        .rpgCard(padding: 16, stroke: RPGTheme.gold.opacity(0.35), fill: AnyShapeStyle(LinearGradient(colors: [Color(hex: "2A1D10"), RPGTheme.card], startPoint: .topLeading, endPoint: .bottomTrailing)))
-        .padding(.top, 8)
-
-        HStack {
-            Text("ИТОГОВАЯ ШКАЛА УРОВНЕЙ").font(.system(size: 13, weight: .bold)).tracking(1).foregroundStyle(RPGTheme.gold)
-            Spacer()
-            NavigationLink("Подробно →") { RanksView() }.font(.system(size: 14, weight: .semibold)).foregroundStyle(RPGTheme.violet2)
-        }
-        .padding(.top, 16)
-        HStack(spacing: 4) {
-            ForEach(scale) { r in
-                VStack(spacing: 2) {
-                    Text(r.id).font(.system(size: 15, weight: .heavy, design: .serif))
-                    Text(compact(r.min)).font(.system(size: 8.5)).foregroundStyle(RPGTheme.muted)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
-                .background(RoundedRectangle(cornerRadius: 10).fill(r.id == p.rank.id ? AnyShapeStyle(LinearGradient(colors: [Color(hex: "6B3DF0"), Color(hex: "3A1D9A")], startPoint: .top, endPoint: .bottom)) : AnyShapeStyle(RPGTheme.card)))
-                .overlay(RoundedRectangle(cornerRadius: 10).stroke(r.id == p.rank.id ? RPGTheme.violet2 : RPGTheme.line, lineWidth: 1))
-                .shadow(color: r.id == p.rank.id ? RPGTheme.violet.opacity(0.5) : .clear, radius: 8)
-            }
-        }
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("СЛЕДУЮЩИЙ УРОВЕНЬ").font(.system(size: 11, weight: .bold)).tracking(1).foregroundStyle(RPGTheme.muted)
-                Text(p.next.map { "До ранга \($0.id) (\($0.name)) осталось" } ?? "Максимальный ранг").font(.system(size: 13, weight: .semibold))
-            }
-            Spacer()
-            Text(p.next == nil ? "∞" : RPGFormat.xp(p.toNext)).font(.system(size: 28, weight: .heavy)).foregroundStyle(RPGTheme.gold)
-        }
-        .rpgCard(padding: 14)
-    }
-
-    private func compact(_ n: Int) -> String {
-        n >= 1000 ? "\(n / 1000)k+" : "\(n)+"
-    }
-
-    @ViewBuilder
-    private var achievementsAndGroups: some View {
-        let s = store.state
-        let cx = s.categoryXP()
-        let done = s.quests.filter(\.isDone)
-        let grouped = Dictionary(grouping: done) { $0.mainAward?.cat ?? "growth" }
-        let order = grouped.keys.sorted { (cx[$0] ?? 0) > (cx[$1] ?? 0) }
-
-        SectionHeader(title: "Достижения")
-        AchievementGrid(items: s.achievements)
-
-        SectionHeader(title: "Результаты по направлениям")
-        ForEach(order, id: \.self) { c in
-            let qs = grouped[c] ?? []
-            DisclosureGroup {
-                VStack(spacing: 0) {
-                    ForEach(qs) { q in
-                        Button { openQuest = QuestRef(id: q.id) } label: {
-                            HStack(alignment: .top) {
-                                Text("\(s.isVerified(q) ? "✓" : "·") \(q.title)").font(.system(size: 13.5)).multilineTextAlignment(.leading)
-                                Spacer()
-                                Text("+\(RPGFormat.xp(s.questXP(q)))").font(.system(size: 13, weight: .bold)).foregroundStyle(RPGTheme.gold)
-                            }
-                            .padding(.vertical, 8)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            } label: {
-                HStack {
-                    Text("\(RPGData.category(c).emoji) \(RPGData.category(c).label)").font(.system(size: 14, weight: .bold))
-                    Spacer()
-                    Text("\(RPGFormat.xp(qs.reduce(0) { $0 + s.questXP($1) })) XP").font(.system(size: 13, weight: .bold)).foregroundStyle(RPGTheme.category(c))
-                }
-                .foregroundStyle(RPGTheme.text)
-            }
-            .tint(RPGTheme.muted)
-            .rpgCard(padding: 12)
-        }
-    }
-
-    @ViewBuilder
-    private var settings: some View {
-        SectionHeader(title: "Настройки")
-        RPGField(title: "Имя", text: $name)
-        HStack(spacing: 10) {
-            RPGField(title: "Возраст", text: $age, keyboard: .numberPad)
-            RPGField(title: "Город", text: $location)
-        }
-        Picker("Режим", selection: $mode) {
-            ForEach(GameMode.allCases) { m in Text("\(m.emoji) \(m.label)").tag(m) }
-        }
-        .pickerStyle(.menu)
-        .tint(RPGTheme.violet2)
-        Toggle("Спокойный экран (без анимаций)", isOn: $calm).tint(RPGTheme.violet)
-        Toggle("Подтверждение достижений родителем", isOn: $parent).tint(RPGTheme.violet)
-        Button("Сохранить") {
-            store.updateProfile(name: name.trimmingCharacters(in: .whitespaces), age: Int(age), location: location, mode: mode, calm: calm, parentConfirm: parent)
-            exportURL = store.exportFile()
-        }
-        .buttonStyle(SecondaryButtonStyle())
-        HStack(spacing: 10) {
-            if let exportURL {
-                ShareLink(item: exportURL) { Label("Экспорт", systemImage: "square.and.arrow.up").frame(maxWidth: .infinity) }
-                    .buttonStyle(SecondaryButtonStyle())
-            }
-            Button { importing = true } label: { Label("Импорт", systemImage: "square.and.arrow.down") }
-                .buttonStyle(SecondaryButtonStyle())
-        }
-        Button("Начать заново", role: .destructive) { confirmReset = true }
-            .font(.system(size: 14, weight: .semibold)).foregroundStyle(RPGTheme.bad).frame(maxWidth: .infinity).padding(.top, 4)
-            .confirmationDialog("Стереть игру и начать заново?", isPresented: $confirmReset, titleVisibility: .visible) {
-                Button("Стереть", role: .destructive) { store.reset() }
-            }
-        Text("You don’t play a character. You build yourself.\nYou don’t build a virtual empire. You build a real one.")
-            .font(.system(size: 13, design: .serif)).foregroundStyle(RPGTheme.muted).multilineTextAlignment(.center)
-            .frame(maxWidth: .infinity).padding(.top, 16)
-    }
-}
-
-struct RanksView: View {
-    @EnvironmentObject private var store: RPGStore
-
-    var body: some View {
-        let current = store.state.playerRank().rank.id
-        let list = RPGData.personRanks
-        RPGScreen(title: "Ранги") {
-            Text("AIGANYM LIFE RPG").legendTitle(26).foregroundStyle(RPGTheme.gold).frame(maxWidth: .infinity).padding(.top, 10)
-            Text("Твоя жизнь — твоя игра. Прокачивай себя к легенде.").font(.footnote).foregroundStyle(RPGTheme.muted).frame(maxWidth: .infinity)
-            Text("Ранг показывает не «сколько задач выполнено», а насколько далеко ты продвинулась в реальной жизненной траектории.")
-                .font(.subheadline).foregroundStyle(RPGTheme.muted).padding(.top, 6)
-            ForEach(Array(list.enumerated()), id: \.offset) { i, r in
-                let info = RPGData.rankInfo[r.id]
-                let next: RankDef? = i + 1 < list.count ? list[i + 1] : nil
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 12) {
-                        RankBadge(id: r.id, size: 52)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(r.name).font(.system(size: 18, weight: .bold, design: .serif))
-                            Text("\(RPGFormat.xp(r.min))\(next.map { "–" + RPGFormat.xp($0.min - 1) } ?? "+") XP").font(.footnote).foregroundStyle(RPGTheme.muted)
-                        }
-                        Spacer()
-                        if r.id == current {
-                            Text("ТЫ ЗДЕСЬ").font(.system(size: 10, weight: .heavy)).padding(.horizontal, 8).padding(.vertical, 4)
-                                .background(RoundedRectangle(cornerRadius: 6).fill(RPGTheme.violet))
-                        }
-                    }
-                    if let info {
-                        Text("Цель: \(info.goal)").font(.system(size: 14, weight: .semibold)).foregroundStyle(Color(hex: r.colorHex))
-                        VStack(alignment: .leading, spacing: 3) {
-                            ForEach(info.needs, id: \.self) { n in Text("• \(n)").font(.system(size: 13.5)).foregroundStyle(Color(hex: "D6D1F5")) }
-                        }
-                        Text(info.motto).font(.system(size: 12.5).italic()).foregroundStyle(RPGTheme.muted)
-                    }
-                }
-                .rpgCard(padding: 14, stroke: r.id == current ? RPGTheme.violet2 : RPGTheme.line)
-                .shadow(color: r.id == current ? RPGTheme.violet.opacity(0.35) : .clear, radius: 12)
-            }
-            SectionHeader(title: "Как получать XP (стандартная шкала)")
-            ForEach(RPGData.xpTiers) { t in
-                HStack {
-                    Text(t.label).font(.system(size: 13.5))
-                    Spacer()
-                    Text("+\(RPGFormat.xp(t.min))–\(RPGFormat.xp(t.max))").font(.system(size: 13.5, weight: .bold)).foregroundStyle(RPGTheme.gold)
-                }
-                .rpgCard(padding: 10)
-            }
-            Text("Свои критерии и веса можно создавать — они входят в Total XP, но не в Verified XP. Verified XP подтверждается сертификатами, GitHub, публикациями, дипломами, ссылками и портфолио.")
-                .font(.footnote).foregroundStyle(RPGTheme.muted).padding(.top, 6)
-        }
     }
 }

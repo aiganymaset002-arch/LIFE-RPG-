@@ -2,7 +2,7 @@
 //  QuestDetailView.swift
 //  LIFE RPG
 //
-//  Карточка квеста: награды по мирам, Boss Battle, доказательство → Verified XP,
+//  Панель квеста: награды по мирам, Boss Battle, доказательство → Verified XP,
 //  ✓ Выполнено, ✕ Не получилось → новый маршрут, подтверждение родителя.
 //
 
@@ -10,7 +10,6 @@ import SwiftUI
 
 struct QuestDetailView: View {
     @EnvironmentObject private var store: RPGStore
-    @Environment(\.dismiss) private var dismiss
     let questId: String
 
     @State private var proofType = RPGData.proofTypes[0]
@@ -18,26 +17,19 @@ struct QuestDetailView: View {
     @State private var confirmDelete = false
     @State private var confirmParent = false
 
+    private func close() { store.panel = nil }
+
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                if let q = store.state.quest(questId) {
-                    details(q)
-                } else {
-                    Text("Квест удалён").foregroundStyle(RPGTheme.muted).padding(40)
+        Group {
+            if let q = store.state.quest(questId) {
+                OrnatePanel(title: q.boss ? "Boss Battle" : "Квест", onClose: close) { details(q) }
+            } else {
+                OrnatePanel(title: "Квест", onClose: close) {
+                    Text("Квест удалён").font(GameFont.body(15)).foregroundStyle(RPGTheme.muted)
                 }
             }
-            .background(RPGTheme.bg2.ignoresSafeArea())
-            .foregroundStyle(RPGTheme.text)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) { Button("Закрыть") { dismiss() }.foregroundStyle(RPGTheme.violet2) }
-            }
         }
-        .presentationDetents([.medium, .large])
-        .presentationBackground(RPGTheme.bg2)
-        .onAppear {
-            if let q = store.state.quest(questId) { proof = q.proof }
-        }
+        .onAppear { if let q = store.state.quest(questId) { proof = q.proof } }
     }
 
     private var proofText: String {
@@ -52,106 +44,116 @@ struct QuestDetailView: View {
         let locked = s.isLocked(q)
         let tier = RPGData.tier(q.tier)
         let child = store.isKids || store.isSen
-        VStack(alignment: .leading, spacing: 12) {
-            if q.boss {
-                Text("🔥 BOSS BATTLE").font(.system(size: 12, weight: .heavy)).tracking(1)
-                    .padding(.horizontal, 10).padding(.vertical, 4)
-                    .background(RoundedRectangle(cornerRadius: 8).fill(RPGTheme.bossGradient))
+
+        HStack(alignment: .top, spacing: 12) {
+            Medallion(icon: q.boss ? "🔥" : RPGData.category(q.mainAward?.cat ?? "growth").emoji, size: 64,
+                      gem: q.boss ? RPGTheme.boss : RPGTheme.category(q.mainAward?.cat ?? "growth"), emoji: true, glow: q.boss)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(q.title).font(GameFont.body(19, .heavy)).foregroundStyle(q.boss ? Color(hex: "FFC4B0") : RPGTheme.cream)
+                    .fixedSize(horizontal: false, vertical: true)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        if !q.phase.isEmpty { tag(q.phase) }
+                        if let d = q.day { tag("День \(d)") }
+                        if let tier { tag(tier.label) } else if q.custom { tag("Свои критерии") }
+                        if let b = q.branch { tag("🔄 \(b)") }
+                    }
+                }
             }
-            Text(q.title).font(.system(size: 21, weight: .bold)).foregroundStyle(q.boss ? Color(hex: "FFB199") : RPGTheme.text)
+        }
+
+        SectionTitle(text: "Награда")
+        ForEach(Array(q.awards.enumerated()), id: \.offset) { _, a in
+            let w = s.world(a.worldId)
+            let c = RPGData.category(a.cat)
+            HStack(spacing: 10) {
+                Text(w?.emoji ?? "🌐").font(.system(size: 22))
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(w?.name ?? a.worldId).font(GameFont.body(14, .bold)).foregroundStyle(RPGTheme.cream)
+                    Text("\(c.emoji) \(c.label)").font(GameFont.body(12, .medium)).foregroundStyle(RPGTheme.muted)
+                }
+                Spacer()
+                GameLabel(text: "+\(RPGFormat.xp(a.xp)) \(store.unit)", size: 16, color: RPGTheme.gold)
+            }
+            .padding(10)
+            .background(RoundedRectangle(cornerRadius: 12).fill(Color(hex: "1A1032")))
+            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.black.opacity(0.5), lineWidth: 1.5))
+        }
+
+        if locked {
+            InsetCard(stroke: RPGTheme.violet) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("🔒 Сначала выполни подготовительные квесты:").font(GameFont.body(14, .bold)).foregroundStyle(RPGTheme.cream)
+                    ForEach(q.requires.compactMap { s.quest($0) }.filter { !$0.isDone }) { r in
+                        Text("• \(r.title)").font(GameFont.body(13, .medium)).foregroundStyle(RPGTheme.muted)
+                    }
+                }
+            }
+        }
+        if q.isDone {
+            InsetCard(stroke: RPGTheme.ok.opacity(0.6), tint: RPGTheme.ok) {
+                Text(doneText(q, verified: s.isVerified(q))).font(GameFont.body(14, .bold)).foregroundStyle(RPGTheme.cream)
+            }
+        }
+        if q.status == .failed {
+            InsetCard(stroke: RPGTheme.bad.opacity(0.6), tint: RPGTheme.bad) {
+                Text("✕ Не получилось — маршрут перестроен. Это не проигрыш.").font(GameFont.body(14, .bold)).foregroundStyle(RPGTheme.cream)
+            }
+        }
+        if q.status == .pending {
+            InsetCard(stroke: RPGTheme.gold, tint: RPGTheme.gold) {
+                Text("⏳ Ждёт подтверждения родителя").font(GameFont.body(14, .bold)).foregroundStyle(RPGTheme.cream)
+            }
+        }
+
+        if !q.custom && !child {
+            SectionTitle(text: "Доказательство → Verified XP")
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 6) {
-                    if !q.phase.isEmpty { tag(q.phase) }
-                    if let d = q.day { tag("День \(d)") }
-                    if let tier { tag(tier.label) } else if q.custom { tag("Свои критерии") }
-                    if let b = q.branch { tag("🔄 \(b)") }
-                }
-            }
-            VStack(spacing: 6) {
-                ForEach(Array(q.awards.enumerated()), id: \.offset) { _, a in
-                    let w = s.world(a.worldId)
-                    let c = RPGData.category(a.cat)
-                    HStack {
-                        Text("\(w?.emoji ?? "") \(w?.name ?? a.worldId) · \(c.emoji) \(c.label)").font(.system(size: 13.5))
-                        Spacer()
-                        Text("+\(RPGFormat.xp(a.xp)) \(store.unit)").font(.system(size: 14, weight: .bold)).foregroundStyle(RPGTheme.gold)
+                    ForEach(RPGData.proofTypes.filter { $0 != "Подтверждение родителя" }, id: \.self) { t in
+                        Button { proofType = t } label: { StoneChip(text: t, selected: proofType == t) }.buttonStyle(.plain)
                     }
-                    .rpgCard(padding: 10)
                 }
             }
+            GameField(title: "", text: $proof, placeholder: "Ссылка / номер сертификата / GitHub", keyboard: .URL)
+        }
 
-            if locked {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("🔒 Сначала выполни подготовительные квесты:").font(.system(size: 14, weight: .semibold))
-                    ForEach(q.requires.compactMap { s.quest($0) }.filter { !$0.isDone }) { r in
-                        Text("• \(r.title)").font(.system(size: 13.5))
-                    }
+        Group {
+            if !q.isDone && q.status == .open && !locked {
+                Button("✓ Выполнено") {
+                    store.complete(q.id, proof: proofText)
+                    close()
                 }
-                .rpgCard(padding: 12, stroke: RPGTheme.violet, fill: AnyShapeStyle(RPGTheme.violet.opacity(0.12)))
-            }
-            if q.isDone {
-                Text(doneText(q, verified: s.isVerified(q)))
-                    .font(.system(size: 13.5))
-                    .rpgCard(padding: 12, stroke: RPGTheme.ok.opacity(0.45), fill: AnyShapeStyle(RPGTheme.ok.opacity(0.12)))
-            }
-            if q.status == .failed {
-                Text("✕ Не получилось — маршрут перестроен. Это не проигрыш.").font(.system(size: 13.5))
-                    .rpgCard(padding: 12, stroke: RPGTheme.bad.opacity(0.45), fill: AnyShapeStyle(RPGTheme.bad.opacity(0.12)))
+                .buttonStyle(ChunkyButtonStyle(kind: store.calm ? .calm : .green, size: 22))
             }
             if q.status == .pending {
-                Text("⏳ Ждёт подтверждения родителя").font(.system(size: 13.5))
-                    .rpgCard(padding: 12, stroke: RPGTheme.gold, fill: AnyShapeStyle(RPGTheme.gold.opacity(0.12)))
-            }
-
-            if !q.custom && !child {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Доказательство → Verified XP").font(.system(size: 13, weight: .semibold)).foregroundStyle(RPGTheme.muted)
-                    Picker("Тип", selection: $proofType) {
-                        ForEach(RPGData.proofTypes, id: \.self) { Text($0).tag($0) }
+                Button("👨‍👩‍👧 Подтвердить (родитель)") { confirmParent = true }
+                    .buttonStyle(ChunkyButtonStyle(kind: .gold, size: 17))
+                    .confirmationDialog("Подтвердить достижение как родитель?", isPresented: $confirmParent, titleVisibility: .visible) {
+                        Button("Подтвердить") { store.confirm(q.id); close() }
                     }
-                    .pickerStyle(.menu)
-                    .tint(RPGTheme.violet2)
-                    RPGField(title: "", text: $proof, placeholder: "Ссылка / номер сертификата / GitHub", keyboard: .URL)
-                }
             }
-
-            VStack(spacing: 10) {
-                if !q.isDone && q.status == .open && !locked {
-                    Button("✓ Выполнено") {
-                        store.complete(q.id, proof: proofText)
-                        dismiss()
-                    }
-                    .buttonStyle(PrimaryButtonStyle(calm: store.calm))
-                }
-                if q.status == .pending {
-                    Button("👨‍👩‍👧 Подтвердить (родитель)") { confirmParent = true }
-                        .buttonStyle(PrimaryButtonStyle(calm: store.calm))
-                        .confirmationDialog("Подтвердить достижение как родитель?", isPresented: $confirmParent, titleVisibility: .visible) {
-                            Button("Подтвердить") { store.confirm(q.id); dismiss() }
-                        }
-                }
-                if q.isDone && !q.custom && !child {
-                    Button("Сохранить доказательство") { store.setProof(q.id, proofText) }.buttonStyle(SecondaryButtonStyle())
-                }
+            if q.isDone && !q.custom && !child {
+                Button("Сохранить доказательство") { store.setProof(q.id, proofText) }.buttonStyle(ChunkyButtonStyle(kind: .cyan, size: 15))
+            }
+            HStack(spacing: 10) {
                 if !q.isDone && q.status == .open && q.roadmapId != nil && !child {
-                    Button("✕ Не получилось → перестроить маршрут") {
-                        dismiss()
+                    Button("✕ Не вышло") {
+                        close()
                         store.fail(q.id)
                     }
-                    .buttonStyle(SecondaryButtonStyle(tint: RPGTheme.muted))
+                    .buttonStyle(ChunkyButtonStyle(kind: .red, size: 14))
                 }
                 if q.isDone {
-                    Button("Отменить выполнение") { store.undo(q.id) }.buttonStyle(SecondaryButtonStyle(tint: RPGTheme.muted))
+                    Button("Отменить") { store.undo(q.id) }.buttonStyle(ChunkyButtonStyle(kind: .stone, size: 14))
                 }
-                Button("Удалить квест", role: .destructive) { confirmDelete = true }
-                    .font(.system(size: 14, weight: .semibold)).foregroundStyle(RPGTheme.bad).padding(.top, 4)
+                Button("Удалить") { confirmDelete = true }
+                    .buttonStyle(ChunkyButtonStyle(kind: .stone, size: 14))
                     .confirmationDialog("Удалить квест?", isPresented: $confirmDelete, titleVisibility: .visible) {
-                        Button("Удалить", role: .destructive) { store.deleteQuest(q.id); dismiss() }
+                        Button("Удалить", role: .destructive) { store.deleteQuest(q.id); close() }
                     }
             }
-            .padding(.top, 4)
         }
-        .padding(20)
     }
 
     private func doneText(_ q: Quest, verified: Bool) -> String {
@@ -164,8 +166,9 @@ struct QuestDetailView: View {
     }
 
     private func tag(_ t: String) -> some View {
-        Text(t).font(.system(size: 12)).foregroundStyle(RPGTheme.muted)
+        Text(t).font(GameFont.body(11, .bold)).foregroundStyle(RPGTheme.cream)
             .padding(.horizontal, 8).padding(.vertical, 4)
-            .background(RoundedRectangle(cornerRadius: 8).fill(RPGTheme.card))
+            .background(Capsule().fill(Color(hex: "1A1032")))
+            .overlay(Capsule().strokeBorder(RPGTheme.edgeMid, lineWidth: 1))
     }
 }

@@ -150,7 +150,7 @@ enum RPGSeed {
     static func demo(now: Date = Date()) -> GameState {
         var s = GameState()
         s.profile = Profile(name: "Айганым", age: 15, location: "Астана, Казахстан", mode: .life,
-                            dream: "Поступить в топовый университет и стать AI/software engineer", createdAt: now, demo: true)
+                            dream: "Поступить в топовый университет и стать AI/software engineer", createdAt: now, demo: true, avatar: "AvatarGirl")
         s.settings = GameSettings(calm: false, parentConfirm: false)
         s.addWorld(name: "Personal World", type: .personal, emoji: "👤", id: "personal")
         s.addWorld(name: "Academic World", type: .academic, emoji: "🎓", id: "academic")

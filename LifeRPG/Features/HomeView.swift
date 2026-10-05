@@ -2,8 +2,9 @@
 //  HomeView.swift
 //  LIFE RPG
 //
-//  Главная: профиль, общий XP и Verified XP, сегодняшние квесты, направления, миры, события.
-//  KIDS — карта приключения и «Сегодня у меня 3 маленьких квеста». SEN — спокойный экран «Сейчас / Потом».
+//  Лобби как в игре: слева круглые кнопки меню (Награды с уровнем, Квесты, Оракул, Миры),
+//  справа герой на островке, внизу баннер текущего квеста и большая кнопка «ИГРАТЬ».
+//  KIDS — «Сегодня у меня 3 маленьких квеста». SEN — спокойный экран «Сейчас / Потом».
 //
 
 import SwiftUI
@@ -13,159 +14,81 @@ struct QuestRef: Identifiable, Hashable { let id: String }
 struct HomeView: View {
     @EnvironmentObject private var store: RPGStore
     @Binding var tab: RPGTab
-    @State private var openQuest: QuestRef?
-    @State private var showAdd = false
 
     var body: some View {
-        Group {
-            if store.isSen { senHome } else if store.isKids { kidsHome } else { lifeHome }
-        }
-        .sheet(item: $openQuest) { ref in QuestDetailView(questId: ref.id) }
-        .sheet(isPresented: $showAdd) { AddResultView() }
+        if store.isSen { senHome } else { lobby }
     }
 
-    // MARK: LIFE
+    // MARK: Лобби
 
-    private var lifeHome: some View {
+    private var lobby: some View {
         let s = store.state
         let p = s.playerRank()
         let xp = s.playerXP()
-        let vxp = s.playerXP(verifiedOnly: true)
-        let cx = s.categoryXP()
         let today = s.todayQuests(3)
-        return ZStack(alignment: .bottomTrailing) {
-            RPGScreen(title: "LIFE RPG") {
-                ProfileHeader()
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Общий XP").font(.system(size: 13, weight: .semibold)).foregroundStyle(RPGTheme.muted)
-                    (Text(RPGFormat.xp(xp)).font(.system(size: 40, weight: .heavy)).foregroundColor(RPGTheme.gold)
-                        + Text("  XP").font(.system(size: 16, weight: .semibold)).foregroundColor(RPGTheme.muted))
-                    XPBar(progress: p.progress)
-                    HStack {
-                        Text("\(RPGFormat.xp(xp)) / \(p.next.map { RPGFormat.xp($0.min) } ?? "∞") XP")
-                        Spacer()
-                        Text(p.next.map { "→ ранг \($0.id): ещё \(RPGFormat.xp(p.toNext))" } ?? "Максимальный ранг")
-                    }
-                    .font(.system(size: 12.5)).foregroundStyle(RPGTheme.muted)
-                    Divider().overlay(RPGTheme.line).padding(.vertical, 4)
-                    HStack {
-                        (Text("Verified XP ") + Text("\(RPGFormat.xp(vxp)) ✓").bold().foregroundColor(RPGTheme.ok))
-                        Spacer()
-                        (Text("Без доказательств ") + Text(RPGFormat.xp(xp - vxp)).bold())
-                    }
-                    .font(.system(size: 12.5)).foregroundStyle(RPGTheme.muted)
-                }
-                .rpgCard(padding: 16)
-
-                SectionHeader(title: "Сегодняшние квесты", actionTitle: "Карта →") { tab = .map }
-                if today.isEmpty {
-                    Button { tab = .gm } label: {
-                        Text("Нет активных квестов. Создай цель с AI Game Master →").font(.subheadline).foregroundStyle(RPGTheme.muted)
-                            .frame(maxWidth: .infinity).padding(20)
-                            .overlay(RoundedRectangle(cornerRadius: 16).stroke(RPGTheme.line, style: StrokeStyle(lineWidth: 1, dash: [5])))
-                    }
-                } else {
-                    ForEach(today) { q in
-                        Button { openQuest = QuestRef(id: q.id) } label: { QuestCard(quest: q) }.buttonStyle(.plain)
-                    }
-                }
-
-                SectionHeader(title: "Направления")
-                ForEach(WorldType.personal.categories, id: \.self) { c in
-                    CategoryRow(cat: c, xp: cx[c] ?? 0)
-                }
-
-                SectionHeader(title: "Миры", actionTitle: "Все →") { tab = .worlds }
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(s.worlds) { w in
-                            let r = s.worldRank(w)
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(w.emoji).font(.system(size: 22))
-                                Text(w.name).font(.system(size: 13, weight: .bold)).lineLimit(1)
-                                Text("\(r.rank.id) · \(RPGFormat.xp(s.worldXP(w.id)))").font(.system(size: 12, weight: .bold)).foregroundStyle(RPGTheme.gold)
-                            }
-                            .frame(width: 112, alignment: .leading)
-                            .rpgCard(padding: 12)
+        let next = today.first
+        return VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 14) {
+                Button { tab = .profile } label: {
+                    MenuRow(icon: "trophy.fill", title: store.isKids ? "Мои награды" : "Награды", gem: Color(hex: "7A45E8")) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            GameBar(progress: p.progress, height: 12)
+                                .frame(width: 140)
+                            Text("Lv. \(p.rank.id)   \(RPGFormat.xp(xp)) / \(p.next.map { RPGFormat.xp($0.min) } ?? "∞")")
+                                .font(GameFont.display(10.5)).foregroundStyle(RPGTheme.cream).outlined(RPGTheme.edgeDark, 0.8)
                         }
                     }
                 }
-
-                SectionHeader(title: "Последние события")
-                VStack(spacing: 0) {
-                    ForEach(s.log.prefix(6)) { l in
-                        HStack(alignment: .top) {
-                            Text(l.text).font(.system(size: 13.5))
-                            Spacer()
-                            if l.xp > 0 { Text("+\(RPGFormat.xp(l.xp))").font(.system(size: 13, weight: .bold)).foregroundStyle(RPGTheme.gold) }
-                        }
-                        .padding(.vertical, 9)
-                        Divider().overlay(RPGTheme.line.opacity(0.6))
+                Button { tab = .map } label: {
+                    MenuRow(icon: "map.fill", title: "Квесты", gem: Color(hex: "1F7BC8"), badge: today.isEmpty ? nil : "\(today.count)") {
+                        Text(store.isKids ? "Сегодня маленькие квесты" : "Карта на \(s.roadmaps.last?.days ?? 90) дней")
+                            .font(GameFont.body(11.5, .bold)).foregroundStyle(RPGTheme.cream).outlined(RPGTheme.edgeDark, 0.7)
+                    }
+                }
+                Button { tab = .gm } label: {
+                    MenuRow(icon: "sparkles", title: "Оракул", gem: Color(hex: "B04CFF")) {
+                        Text("Мечта → игра").font(GameFont.body(11.5, .bold)).foregroundStyle(RPGTheme.cream).outlined(RPGTheme.edgeDark, 0.7)
+                    }
+                }
+                Button { tab = .worlds } label: {
+                    MenuRow(icon: "globe.europe.africa.fill", title: "Миры", gem: Color(hex: "1FA87A")) {
+                        Text("\(s.worlds.count) мир(а)").font(GameFont.body(11.5, .bold)).foregroundStyle(RPGTheme.cream).outlined(RPGTheme.edgeDark, 0.7)
                     }
                 }
             }
-            AddButton { showAdd = true }
-        }
-    }
+            .buttonStyle(.plain)
+            .padding(.top, 14)
 
-    // MARK: KIDS
+            Spacer()
 
-    private var kidsHome: some View {
-        let s = store.state
-        let p = s.playerRank()
-        let today = s.todayQuests(3)
-        let pending = s.quests.filter { $0.status == .pending }
-        let path = Array(RPGData.kidsRanks.prefix(5))
-        return ZStack(alignment: .bottomTrailing) {
-            RPGScreen(title: "Моё приключение") {
-                Text("Привет, \(s.profile?.name ?? "")! 👋").font(.system(size: 26, weight: .heavy)).padding(.top, 6)
-                HStack(spacing: 0) {
-                    ForEach(Array(path.enumerated()), id: \.offset) { i, r in
-                        VStack(spacing: 4) {
-                            Text(r.icon).font(.system(size: 22))
-                                .frame(width: 44, height: 44)
-                                .background(Circle().fill(i == p.index ? RPGTheme.gold.opacity(0.2) : RPGTheme.bg2))
-                                .overlay(Circle().stroke(i < p.index ? RPGTheme.ok : (i == p.index ? RPGTheme.gold : RPGTheme.line), lineWidth: 2))
-                                .scaleEffect(i == p.index ? 1.12 : 1)
-                            Text(r.name).font(.system(size: 9.5, weight: .bold))
-                        }
-                        .opacity(i <= p.index ? 1 : 0.5)
-                        if i < path.count - 1 {
-                            Rectangle().fill(RPGTheme.line).frame(height: 3).frame(maxWidth: .infinity).padding(.bottom, 14)
-                        }
-                    }
-                }
-                .rpgCard(padding: 12, stroke: Color(hex: "2F6B55"), fill: AnyShapeStyle(LinearGradient(colors: [Color(hex: "1F3B2F"), RPGTheme.card], startPoint: .topLeading, endPoint: .bottomTrailing)))
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("\(RPGFormat.xp(s.playerXP())) ⭐").font(.system(size: 38, weight: .heavy)).foregroundStyle(RPGTheme.gold)
-                    XPBar(progress: p.progress)
-                    HStack {
-                        Text("\(p.rank.icon) \(p.rank.name)")
-                        Spacer()
-                        Text(p.next.map { "до \($0.icon) \($0.name): \(RPGFormat.xp(p.toNext)) ⭐" } ?? "🏆")
-                    }
-                    .font(.system(size: 13)).foregroundStyle(RPGTheme.muted)
-                }
-                .rpgCard(padding: 16)
-
-                Text("Сегодня у меня \(today.count) \(today.count == 1 ? "маленький квест" : "маленьких квеста")")
-                    .font(.system(size: 19, weight: .bold)).padding(.top, 14)
-                if today.isEmpty { Text("Все квесты выполнены! 🎉").foregroundStyle(RPGTheme.muted) }
-                ForEach(today) { q in
-                    Button { openQuest = QuestRef(id: q.id) } label: { QuestCard(quest: q, big: true) }.buttonStyle(.plain)
-                }
-                if !pending.isEmpty {
-                    Text("⏳ Ждут подтверждения родителя").font(.system(size: 17, weight: .bold)).padding(.top, 12)
-                    ForEach(pending) { q in
-                        Button { openQuest = QuestRef(id: q.id) } label: { QuestCard(quest: q) }.buttonStyle(.plain)
-                    }
-                }
-                SectionHeader(title: "Мои награды")
-                AchievementGrid(items: Array(s.achievements.prefix(8)))
+            if let next {
+                Button { store.open(.quest(next.id)) } label: { QuestBanner(quest: next, kids: store.isKids, count: today.count) }
+                    .buttonStyle(.plain)
+                    .padding(.bottom, 10)
             }
-            AddButton { showAdd = true }
+
+            HStack(spacing: 12) {
+                Button { store.open(.add(nil)) } label: {
+                    VStack(spacing: 3) {
+                        Medallion(icon: "plus", size: 56, gem: Color(hex: "C07A16"))
+                        Text("РЕЗУЛЬТАТ").font(GameFont.display(9.5)).foregroundStyle(RPGTheme.cream).outlined(RPGTheme.edgeDark, 0.8)
+                    }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Добавить реальный результат")
+                Button {
+                    if let next { store.open(.quest(next.id)) } else { tab = .gm }
+                } label: {
+                    HStack(spacing: 10) {
+                        Text(next == nil ? "Новая игра" : "Играть")
+                        Image(systemName: "play.fill").font(.system(size: 20, weight: .black))
+                    }
+                }
+                .buttonStyle(ChunkyButtonStyle(kind: .cyan, size: 26, radius: 20))
+            }
+            .padding(.bottom, 10)
         }
+        .padding(.horizontal, 16)
     }
 
     // MARK: SEN
@@ -174,118 +97,104 @@ struct HomeView: View {
         let s = store.state
         let next2 = s.todayQuests(2)
         let p = s.playerRank()
-        return RPGScreen(title: "Мои шаги") {
-            Text("Привет, \(s.profile?.name ?? "")").font(.system(size: 24, weight: .bold)).padding(.vertical, 8)
-            senLabel("СЕЙЧАС")
-            VStack(alignment: .leading, spacing: 10) {
-                if let now = next2.first {
-                    Text(now.title).font(.system(size: 26, weight: .bold))
-                    Text("Награда: \(RPGFormat.xp(now.mainAward?.xp ?? 0)) ⭐").font(.system(size: 17, weight: .bold)).foregroundStyle(Color(hex: "E8D38A"))
-                    Button("✓ Готово") { store.complete(now.id) }
-                        .buttonStyle(PrimaryButtonStyle(calm: true))
-                        .font(.system(size: 22, weight: .bold))
-                        .padding(.top, 8)
-                } else {
-                    Text("Всё сделано ⭐").font(.system(size: 26, weight: .bold))
+        return ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Привет, \(s.profile?.name ?? "")").font(GameFont.title(28)).foregroundStyle(RPGTheme.cream).padding(.top, 12)
+                senLabel("СЕЙЧАС")
+                VStack(alignment: .leading, spacing: 12) {
+                    if let now = next2.first {
+                        Text(now.title).font(GameFont.body(28, .bold)).foregroundStyle(RPGTheme.cream)
+                        Text("Награда: \(RPGFormat.xp(now.mainAward?.xp ?? 0)) ⭐").font(GameFont.body(18, .bold)).foregroundStyle(Color(hex: "E8D38A"))
+                        Button("✓ Готово") { store.complete(now.id) }
+                            .buttonStyle(ChunkyButtonStyle(kind: .calm, size: 26))
+                    } else {
+                        Text("Всё сделано ⭐").font(GameFont.body(28, .bold)).foregroundStyle(RPGTheme.cream)
+                    }
                 }
+                .padding(22)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(RoundedRectangle(cornerRadius: 22).fill(RPGTheme.senCard))
+                .overlay(RoundedRectangle(cornerRadius: 22).strokeBorder(Color(hex: "2D3B4E"), lineWidth: 2))
+                senLabel("ПОТОМ")
+                Text(next2.count > 1 ? next2[1].title : "Отдых 🌿")
+                    .font(GameFont.body(24, .bold)).foregroundStyle(RPGTheme.cream)
+                    .padding(22)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(RoundedRectangle(cornerRadius: 22).fill(RPGTheme.senCard))
+                    .opacity(0.7)
+                Text("Мои звёзды: \(RPGFormat.xp(s.playerXP())) ⭐").font(GameFont.body(20, .bold)).foregroundStyle(RPGTheme.cream).padding(.top, 10)
+                GameBar(progress: p.progress, height: 18, fill: LinearGradient(colors: [Color(hex: "A8D8CB"), RPGTheme.calm], startPoint: .top, endPoint: .bottom))
             }
-            .rpgCard(padding: 22, stroke: Color(hex: "2D3B4E"), fill: AnyShapeStyle(RPGTheme.senCard))
-            senLabel("ПОТОМ")
-            Text(next2.count > 1 ? next2[1].title : "Отдых 🌿")
-                .font(.system(size: 24, weight: .bold))
-                .rpgCard(padding: 22, stroke: Color(hex: "2D3B4E"), fill: AnyShapeStyle(RPGTheme.senCard))
-                .opacity(0.7)
-            Text("Мои звёзды: \(RPGFormat.xp(s.playerXP())) ⭐").font(.system(size: 18)).padding(.top, 16)
-            XPBar(progress: p.progress, style: AnyShapeStyle(RPGTheme.calm))
+            .padding(16)
         }
     }
 
     private func senLabel(_ t: String) -> some View {
-        Text(t).font(.system(size: 14, weight: .heavy)).tracking(2).foregroundStyle(Color(hex: "8FB3A8")).padding(.top, 10)
+        Text(t).font(GameFont.display(15)).tracking(2).foregroundStyle(Color(hex: "8FB3A8"))
     }
 }
 
-struct ProfileHeader: View {
-    @EnvironmentObject private var store: RPGStore
+/// Кнопка меню лобби: медальон + название + подпись.
+struct MenuRow<Sub: View>: View {
+    let icon: String
+    let title: String
+    var gem: Color = Color(hex: "2B1C52")
+    var badge: String? = nil
+    @ViewBuilder var sub: Sub
+
     var body: some View {
-        let s = store.state
-        let p = s.playerRank()
-        let prof = s.profile
         HStack(spacing: 12) {
-            Text(String((prof?.name ?? "?").prefix(1)))
-                .font(.system(size: 26, weight: .heavy))
-                .frame(width: 58, height: 58)
-                .background(RoundedRectangle(cornerRadius: 16).fill(RPGTheme.violetGradient))
-            VStack(alignment: .leading, spacing: 2) {
-                Text((prof?.name ?? "").uppercased()).font(.system(size: 20, weight: .heavy))
-                Text([prof?.age.map { "Возраст: \($0)" }, prof?.location].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "))
-                    .font(.system(size: 12.5)).foregroundStyle(RPGTheme.muted)
-                (Text("RPG уровень ") + Text("\(p.rank.id) (\(p.rank.name))").bold().foregroundColor(RPGTheme.rankAccent(p.rank.id)))
-                    .font(.system(size: 13))
-            }
-            Spacer()
-            NavigationLink { RanksView() } label: {
-                Text(p.rank.id)
-                    .legendTitle(26)
-                    .foregroundStyle(.white)
-                    .frame(width: 56, height: 62)
-                    .background(ShieldShape().fill(LinearGradient(colors: [RPGTheme.violet2, Color(hex: "4B23B8")], startPoint: .top, endPoint: .bottom)))
-                    .shadow(color: RPGTheme.violet.opacity(0.6), radius: 8)
-            }
-        }
-        .rpgCard(padding: 14, fill: AnyShapeStyle(LinearGradient(colors: [RPGTheme.card2, RPGTheme.card], startPoint: .topLeading, endPoint: .bottomTrailing)))
-        .padding(.top, 8)
-    }
-}
-
-struct ShieldShape: Shape {
-    func path(in r: CGRect) -> Path {
-        var p = Path()
-        p.move(to: CGPoint(x: r.midX, y: r.minY))
-        p.addLine(to: CGPoint(x: r.maxX, y: r.minY + r.height * 0.15))
-        p.addLine(to: CGPoint(x: r.maxX, y: r.minY + r.height * 0.6))
-        p.addLine(to: CGPoint(x: r.midX, y: r.maxY))
-        p.addLine(to: CGPoint(x: r.minX, y: r.minY + r.height * 0.6))
-        p.addLine(to: CGPoint(x: r.minX, y: r.minY + r.height * 0.15))
-        p.closeSubpath()
-        return p
-    }
-}
-
-struct AddButton: View {
-    let action: () -> Void
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: "plus")
-                .font(.system(size: 26, weight: .semibold))
-                .foregroundStyle(Color(hex: "1B1300"))
-                .frame(width: 58, height: 58)
-                .background(Circle().fill(RPGTheme.goldGradient))
-                .shadow(color: RPGTheme.gold.opacity(0.45), radius: 12, y: 6)
-        }
-        .padding(18)
-        .accessibilityLabel("Добавить результат")
-    }
-}
-
-struct AchievementGrid: View {
-    let items: [Achievement]
-    var body: some View {
-        if items.isEmpty {
-            Text("Выполни первый квест — и здесь появятся награды").font(.footnote).foregroundStyle(RPGTheme.muted)
-        } else {
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
-                ForEach(items) { a in
-                    VStack(spacing: 4) {
-                        Text(a.icon).font(.system(size: 24))
-                        Text(a.title).font(.system(size: 10.5)).foregroundStyle(RPGTheme.muted).multilineTextAlignment(.center).lineLimit(3)
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 78)
-                    .padding(.vertical, 8).padding(.horizontal, 4)
-                    .background(RoundedRectangle(cornerRadius: 14).fill(RPGTheme.card))
-                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(RPGTheme.line, lineWidth: 1))
+            ZStack(alignment: .topTrailing) {
+                Medallion(icon: icon, size: 58, gem: gem)
+                if let badge {
+                    Text(badge)
+                        .font(GameFont.display(12))
+                        .foregroundStyle(.white)
+                        .frame(minWidth: 22, minHeight: 22)
+                        .background(Circle().fill(RPGTheme.bossGradient))
+                        .overlay(Circle().strokeBorder(RPGTheme.goldGradient, lineWidth: 1.5))
+                        .offset(x: 4, y: -4)
                 }
             }
+            VStack(alignment: .leading, spacing: 4) {
+                GameLabel(text: title, size: 21)
+                sub
+            }
         }
+        .contentShape(Rectangle())
+    }
+}
+
+/// Баннер внизу лобби (как «Fates Pass»): текущий квест или Boss Battle.
+struct QuestBanner: View {
+    @EnvironmentObject private var store: RPGStore
+    let quest: Quest
+    var kids = false
+    var count = 1
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10).fill(quest.boss ? AnyShapeStyle(RPGTheme.bossGradient) : AnyShapeStyle(LinearGradient(colors: [Color(hex: "3FD8FF"), Color(hex: "1F5FD1")], startPoint: .top, endPoint: .bottom)))
+                Text(quest.boss ? "🔥" : (kids ? "⭐" : "⚔️")).font(.system(size: 26))
+            }
+            .frame(width: 52, height: 60)
+            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(RPGTheme.goldGradient, lineWidth: 2))
+            VStack(alignment: .leading, spacing: 3) {
+                Text(kids ? "Сегодня у меня \(count) \(count == 1 ? "маленький квест" : "маленьких квеста")" : (quest.boss ? "BOSS BATTLE" : "Следующий квест"))
+                    .font(GameFont.display(12.5)).foregroundStyle(quest.boss ? Color(hex: "FFB199") : RPGTheme.gold).outlined(RPGTheme.edgeDark, 0.8)
+                Text(quest.title).font(GameFont.body(14, .bold)).foregroundStyle(RPGTheme.cream).lineLimit(2).multilineTextAlignment(.leading)
+                Text("+\(RPGFormat.xp(quest.mainAward?.xp ?? 0)) \(store.unit)").font(GameFont.display(12)).foregroundStyle(RPGTheme.gold)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(10)
+        .background(
+            ZStack {
+                RoundedRectangle(cornerRadius: 14).fill(LinearGradient(colors: [Color(hex: "2E5A8A").opacity(0.95), Color(hex: "1E1440").opacity(0.95)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                RoundedRectangle(cornerRadius: 14).strokeBorder(RPGTheme.goldGradient, lineWidth: 2)
+            }
+        )
+        .shadow(color: .black.opacity(0.5), radius: 8, y: 4)
     }
 }

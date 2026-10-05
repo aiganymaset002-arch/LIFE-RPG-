@@ -22,7 +22,10 @@ for folder in sorted(os.listdir(os.path.join(ROOT, APP))):
     if os.path.isdir(p) and not folder.endswith(".xcassets"):
         groups[folder] = sorted(f for f in os.listdir(p) if f.endswith(".swift"))
 
+groups = {g: fs for g, fs in groups.items() if fs}
 swift = [(g, f) for g, fs in groups.items() for f in fs]
+font_dir = os.path.join(ROOT, APP, "Fonts")
+fonts = sorted(f for f in os.listdir(font_dir) if f.endswith(".ttf")) if os.path.isdir(font_dir) else []
 
 T = {k: oid(k) for k in ["project", "target", "main", "app_group", "support", "products", "product",
                           "sources", "frameworks", "resources", "cfg_proj", "cfg_target",
@@ -30,6 +33,7 @@ T = {k: oid(k) for k in ["project", "target", "main", "app_group", "support", "p
                           "assets_ref", "assets_build", "privacy_ref", "privacy_build", "readme_ref"]}
 for g in groups:
     T["group_" + g] = oid("group", g)
+T["group_Fonts"] = oid("group", "Fonts")
 
 out = []
 w = out.append
@@ -40,11 +44,15 @@ for g, f in swift:
     w(f"\t\t{oid('build', g, f)} /* {f} in Sources */ = {{isa = PBXBuildFile; fileRef = {oid('ref', g, f)} /* {f} */; }};\n")
 w(f"\t\t{T['assets_build']} /* Assets.xcassets in Resources */ = {{isa = PBXBuildFile; fileRef = {T['assets_ref']} /* Assets.xcassets */; }};\n")
 w(f"\t\t{T['privacy_build']} /* PrivacyInfo.xcprivacy in Resources */ = {{isa = PBXBuildFile; fileRef = {T['privacy_ref']} /* PrivacyInfo.xcprivacy */; }};\n")
+for f in fonts:
+    w(f"\t\t{oid('build', 'Fonts', f)} /* {f} in Resources */ = {{isa = PBXBuildFile; fileRef = {oid('ref', 'Fonts', f)} /* {f} */; }};\n")
 w("/* End PBXBuildFile section */\n\n")
 
 w("/* Begin PBXFileReference section */\n")
 for g, f in swift:
     w(f"\t\t{oid('ref', g, f)} /* {f} */ = {{isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = \"{f}\"; sourceTree = \"<group>\"; }};\n")
+for f in fonts:
+    w(f"\t\t{oid('ref', 'Fonts', f)} /* {f} */ = {{isa = PBXFileReference; lastKnownFileType = file; path = \"{f}\"; sourceTree = \"<group>\"; }};\n")
 w(f"\t\t{T['assets_ref']} /* Assets.xcassets */ = {{isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = \"<group>\"; }};\n")
 w(f"\t\t{T['privacy_ref']} /* PrivacyInfo.xcprivacy */ = {{isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = \"<group>\"; }};\n")
 w(f"\t\t{T['readme_ref']} /* README.md */ = {{isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = \"<group>\"; }};\n")
@@ -58,12 +66,19 @@ w(f"\t\t{T['main']} /* Main */ = {{\n\t\t\tisa = PBXGroup;\n\t\t\tchildren = (\n
 w(f"\t\t{T['app_group']} /* {APP} */ = {{\n\t\t\tisa = PBXGroup;\n\t\t\tchildren = (\n")
 for g in groups:
     w(f"\t\t\t\t{T['group_' + g]} /* {g} */,\n")
+if fonts:
+    w(f"\t\t\t\t{T['group_Fonts']} /* Fonts */,\n")
 w(f"\t\t\t\t{T['assets_ref']} /* Assets.xcassets */,\n\t\t\t);\n\t\t\tpath = {APP};\n\t\t\tsourceTree = \"<group>\";\n\t\t}};\n")
 for g, fs in groups.items():
     w(f"\t\t{T['group_' + g]} /* {g} */ = {{\n\t\t\tisa = PBXGroup;\n\t\t\tchildren = (\n")
     for f in fs:
         w(f"\t\t\t\t{oid('ref', g, f)} /* {f} */,\n")
     w(f"\t\t\t);\n\t\t\tpath = {g};\n\t\t\tsourceTree = \"<group>\";\n\t\t}};\n")
+if fonts:
+    w(f"\t\t{T['group_Fonts']} /* Fonts */ = {{\n\t\t\tisa = PBXGroup;\n\t\t\tchildren = (\n")
+    for f in fonts:
+        w(f"\t\t\t\t{oid('ref', 'Fonts', f)} /* {f} */,\n")
+    w("\t\t\t);\n\t\t\tpath = Fonts;\n\t\t\tsourceTree = \"<group>\";\n\t\t};\n")
 w(f"\t\t{T['support']} /* Supporting Files */ = {{\n\t\t\tisa = PBXGroup;\n\t\t\tchildren = (\n\t\t\t\t{T['privacy_ref']} /* PrivacyInfo.xcprivacy */,\n\t\t\t\t{T['readme_ref']} /* README.md */,\n\t\t\t);\n\t\t\tname = \"Supporting Files\";\n\t\t\tsourceTree = \"<group>\";\n\t\t}};\n")
 w(f"\t\t{T['products']} /* Products */ = {{\n\t\t\tisa = PBXGroup;\n\t\t\tchildren = (\n\t\t\t\t{T['product']} /* {APP}.app */,\n\t\t\t);\n\t\t\tname = Products;\n\t\t\tsourceTree = \"<group>\";\n\t\t}};\n")
 w("/* End PBXGroup section */\n\n")
@@ -127,7 +142,7 @@ w(f"""/* Begin PBXNativeTarget section */
 \t\t\tfiles = (
 \t\t\t\t{T['assets_build']} /* Assets.xcassets in Resources */,
 \t\t\t\t{T['privacy_build']} /* PrivacyInfo.xcprivacy in Resources */,
-\t\t\t);
+""" + "".join(f"\t\t\t\t{oid('build', 'Fonts', f)} /* {f} in Resources */,\n" for f in fonts) + f"""\t\t\t);
 \t\t\trunOnlyForDeploymentPostprocessing = 0;
 \t\t}};
 /* End PBXResourcesBuildPhase section */

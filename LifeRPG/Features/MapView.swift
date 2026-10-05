@@ -2,8 +2,8 @@
 //  MapView.swift
 //  LIFE RPG
 //
-//  Центральный экран: интерактивная карта-таймлайн. DAY 37 / 90, XP мира, ранг, текущий квест,
-//  Точка А → недели с квест-карточками → Точка Б.
+//  Карта приключения: извилистая тропа снизу вверх (Точка А → Точка Б), узлы-квесты как уровни,
+//  ✓ пройденные — золотые, текущий светится, впереди — камень, Boss — огненный. Сверху DAY 37 / 90.
 //
 
 import SwiftUI
@@ -12,9 +12,8 @@ struct MapView: View {
     @EnvironmentObject private var store: RPGStore
     @Binding var tab: RPGTab
     @State private var selectedId: String?
-    @State private var openQuest: QuestRef?
-    @State private var addToMap = false
     @State private var confirmDelete = false
+    @State private var pulse = false
 
     private var roadmap: Roadmap? {
         let rms = store.state.roadmaps
@@ -22,197 +21,308 @@ struct MapView: View {
     }
 
     var body: some View {
-        RPGScreen(title: "Карта") {
-            if let rm = roadmap {
-                content(rm)
-            } else {
-                VStack(spacing: 16) {
-                    Text("🗺").font(.system(size: 54))
-                    Text("У тебя ещё нет дорожной карты.").foregroundStyle(RPGTheme.muted)
-                    Button("✨ Создать с AI Game Master") { tab = .gm }.buttonStyle(PrimaryButtonStyle())
+        if let rm = roadmap {
+            content(rm)
+        } else {
+            VStack(spacing: 18) {
+                Spacer()
+                OrnatePanel(title: "Карта") {
+                    VStack(spacing: 14) {
+                        Text("🗺").font(.system(size: 60))
+                        Text("У тебя ещё нет дорожной карты. Расскажи Оракулу свою мечту — он построит игру.")
+                            .font(GameFont.body(15, .medium)).foregroundStyle(RPGTheme.cream).multilineTextAlignment(.center)
+                        Button("✨ К Оракулу") { tab = .gm }.buttonStyle(ChunkyButtonStyle(kind: .purple))
+                    }
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.top, 60)
+                Spacer()
             }
-        }
-        .sheet(item: $openQuest) { ref in QuestDetailView(questId: ref.id) }
-        .sheet(isPresented: $addToMap) {
-            if let rm = roadmap { AddResultView(roadmapId: rm.id) }
+            .padding(20)
         }
     }
 
-    @ViewBuilder
     private func content(_ rm: Roadmap) -> some View {
         let s = store.state
         let pr = s.progress(of: rm)
         let w = s.world(rm.worldId)
         let wx = s.worldXP(rm.worldId)
         let wr = RPGEngine.rank(for: wx, scale: w?.type.scale ?? .person)
-        let cur = s.currentQuest(rm)
-
-        if s.roadmaps.count > 1 {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 6) {
-                    ForEach(s.roadmaps) { r in
-                        Button { selectedId = r.id } label: {
-                            Chip(text: r.title.count > 28 ? String(r.title.prefix(27)) + "…" : r.title, selected: r.id == rm.id)
+        let quests = s.roadmapQuests(rm)
+        let current = s.currentQuest(rm)
+        return VStack(spacing: 0) {
+            // Шапка карты
+            VStack(spacing: 8) {
+                if s.roadmaps.count > 1 {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 6) {
+                            ForEach(s.roadmaps) { r in
+                                Button { selectedId = r.id } label: {
+                                    StoneChip(text: r.title.count > 26 ? String(r.title.prefix(25)) + "…" : r.title, selected: r.id == rm.id)
+                                }
+                            }
                         }
                     }
                 }
-                .padding(.top, 8)
-            }
-        }
-
-        VStack(alignment: .leading, spacing: 8) {
-            Text(rm.title).font(.system(size: 16, weight: .heavy))
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text("DAY \(pr.day)").legendTitle(26)
-                Text("/ \(rm.days)").foregroundStyle(RPGTheme.muted)
-                Spacer()
-                Text("\(Int((pr.timePct * 100).rounded()))%").font(.system(size: 16, weight: .heavy)).foregroundStyle(RPGTheme.gold)
-            }
-            XPBar(progress: pr.timePct)
-            HStack(spacing: 8) {
-                statBox(w?.type == .company ? "Company XP" : "\(w?.name ?? "") XP", RPGFormat.xp(wx))
-                statBox("Rank", "\(wr.rank.id) — \(wr.rank.name)")
-                statBox(wr.next.map { "до Rank \($0.id)" } ?? "Rank", wr.next == nil ? "MAX" : "\(RPGFormat.xp(wr.toNext)) XP")
-            }
-            Text("Квесты: \(pr.done) / \(pr.total)").font(.system(size: 12.5)).foregroundStyle(RPGTheme.muted).padding(.top, 2)
-            XPBar(progress: pr.pct, height: 6, style: AnyShapeStyle(RPGTheme.violetGradient))
-        }
-        .rpgCard(padding: 16, fill: AnyShapeStyle(LinearGradient(colors: [Color(hex: "241C5C"), RPGTheme.card], startPoint: .top, endPoint: .bottom)))
-        .padding(.top, 8)
-
-        if let cur {
-            Button { openQuest = QuestRef(id: cur.id) } label: {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("▶ ТЕКУЩИЙ КВЕСТ · день \(cur.day.map { String($0) } ?? "—")")
-                        .font(.system(size: 11, weight: .heavy)).tracking(1).foregroundStyle(RPGTheme.gold)
-                    Text(cur.title).font(.system(size: 16, weight: .bold)).multilineTextAlignment(.leading)
-                    Text("+\(RPGFormat.xp(cur.mainAward?.xp ?? 0)) \(store.unit)").font(.system(size: 14, weight: .heavy)).foregroundStyle(RPGTheme.gold)
+                HStack(alignment: .center, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(rm.title).font(GameFont.title(15)).foregroundStyle(RPGTheme.cream).lineLimit(1)
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            GameLabel(text: "DAY \(pr.day)", size: 28, color: RPGTheme.gold)
+                            Text("/ \(rm.days)").font(GameFont.display(15)).foregroundStyle(RPGTheme.muted)
+                        }
+                    }
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 3) {
+                        HStack(spacing: 6) {
+                            Text(w?.type == .company ? "COMPANY" : (w?.name ?? "").uppercased()).font(GameFont.display(10)).foregroundStyle(RPGTheme.muted).lineLimit(1)
+                            RankShield(id: wr.rank.id, size: 26)
+                        }
+                        Text("\(RPGFormat.xp(wx)) XP · \(wr.rank.name)").font(GameFont.display(12)).foregroundStyle(RPGTheme.cream).outlined(RPGTheme.edgeDark, 0.7)
+                        Text(wr.next.map { "\(RPGFormat.xp(wr.toNext)) XP до Rank \($0.id)" } ?? "MAX").font(GameFont.body(11, .bold)).foregroundStyle(RPGTheme.gold)
+                    }
                 }
-                .rpgCard(padding: 14, stroke: RPGTheme.gold, fill: AnyShapeStyle(LinearGradient(colors: [RPGTheme.gold.opacity(0.18), RPGTheme.card], startPoint: .topLeading, endPoint: .bottomTrailing)))
-                .shadow(color: RPGTheme.gold.opacity(0.18), radius: 12)
+                GameBar(progress: pr.timePct, height: 16, label: "\(Int((pr.timePct * 100).rounded()))%  ·  квесты \(pr.done)/\(pr.total)")
             }
-            .buttonStyle(.plain)
+            .padding(14)
+            .background(PanelBackground(radius: 20))
+            .padding(.horizontal, 12)
+            .padding(.top, 8)
+
+            // Тропа
+            ScrollViewReader { proxy in
+                ScrollView(showsIndicators: false) {
+                    TrailView(roadmap: rm, quests: quests, currentId: current?.id, today: pr.day, pulse: pulse)
+                        .padding(.vertical, 20)
+                    HStack(spacing: 10) {
+                        Button("＋ Свой квест") { store.open(.add(rm.id)) }.buttonStyle(ChunkyButtonStyle(kind: .purple, size: 15))
+                        Button("Удалить карту") { confirmDelete = true }.buttonStyle(ChunkyButtonStyle(kind: .stone, size: 15))
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 20)
+                    .id("bottom")
+                }
+                .onAppear { scroll(proxy, to: current?.id) }
+                .onChange(of: rm.id) { _, _ in scroll(proxy, to: store.state.currentQuest(rm)?.id) }
+            }
+        }
+        .confirmationDialog("Удалить карту и её невыполненные квесты? Выполненные результаты и XP останутся.", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Удалить", role: .destructive) { store.deleteRoadmap(rm.id); selectedId = nil }
+        }
+        .onAppear {
+            guard !store.calm else { return }
+            withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true)) { pulse = true }
+        }
+    }
+
+    private func scroll(_ proxy: ScrollViewProxy, to id: String?) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            if let id { proxy.scrollTo(id, anchor: .center) } else { proxy.scrollTo("bottom", anchor: .bottom) }
+        }
+    }
+}
+
+/// Извилистая тропа: снизу Точка А, сверху замок Точки Б.
+struct TrailView: View {
+    @EnvironmentObject private var store: RPGStore
+    let roadmap: Roadmap
+    let quests: [Quest]
+    let currentId: String?
+    let today: Int
+    let pulse: Bool
+
+    private let step: CGFloat = 118
+    private let top: CGFloat = 230
+    private let bottomPad: CGFloat = 170
+
+    var body: some View {
+        GeometryReader { g in
+            let width = g.size.width
+            let pts = points(width: width)
+            ZStack {
+                // дорожка
+                Path { p in
+                    guard let first = pts.first else { return }
+                    p.move(to: first)
+                    for i in 1..<Swift.max(1, pts.count) {
+                        let a = pts[i - 1], b = pts[i]
+                        p.addCurve(to: b, control1: CGPoint(x: a.x, y: (a.y + b.y) / 2), control2: CGPoint(x: b.x, y: (a.y + b.y) / 2))
+                    }
+                }
+                .stroke(Color(hex: "1A0E33").opacity(0.8), style: StrokeStyle(lineWidth: 26, lineCap: .round))
+                Path { p in
+                    guard let first = pts.first else { return }
+                    p.move(to: first)
+                    for i in 1..<Swift.max(1, pts.count) {
+                        let a = pts[i - 1], b = pts[i]
+                        p.addCurve(to: b, control1: CGPoint(x: a.x, y: (a.y + b.y) / 2), control2: CGPoint(x: b.x, y: (a.y + b.y) / 2))
+                    }
+                }
+                .stroke(LinearGradient(colors: [Color(hex: "C9A86A"), Color(hex: "8A6A3A")], startPoint: .top, endPoint: .bottom), style: StrokeStyle(lineWidth: 16, lineCap: .round))
+                Path { p in
+                    guard let first = pts.first else { return }
+                    p.move(to: first)
+                    for i in 1..<Swift.max(1, pts.count) {
+                        let a = pts[i - 1], b = pts[i]
+                        p.addCurve(to: b, control1: CGPoint(x: a.x, y: (a.y + b.y) / 2), control2: CGPoint(x: b.x, y: (a.y + b.y) / 2))
+                    }
+                }
+                .stroke(Color(hex: "FFF0C0").opacity(0.7), style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [2, 12]))
+
+                // Точка Б — замок
+                VStack(spacing: 6) {
+                    Text("🏰").font(.system(size: 64)).shadow(color: RPGTheme.goldLight.opacity(0.8), radius: 16)
+                    VStack(spacing: 3) {
+                        GameLabel(text: "Точка Б · день \(roadmap.days)", size: 13, color: RPGTheme.gold)
+                        if let b = roadmap.pointB {
+                            Text(b.prefix(4).joined(separator: " · ")).font(GameFont.body(11, .bold)).foregroundStyle(RPGTheme.cream).multilineTextAlignment(.center).lineLimit(3)
+                        } else {
+                            Text(roadmap.dream.isEmpty ? roadmap.title : roadmap.dream).font(GameFont.body(11, .bold)).foregroundStyle(RPGTheme.cream).multilineTextAlignment(.center).lineLimit(3)
+                        }
+                    }
+                    .padding(10)
+                    .background(RoundedRectangle(cornerRadius: 12).fill(Color(hex: "1A1032").opacity(0.9)))
+                    .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(RPGTheme.goldGradient, lineWidth: 1.5))
+                    .frame(maxWidth: 260)
+                }
+                .position(x: width / 2, y: 110)
+
+                // Неделя-указатели
+                ForEach(Array(quests.enumerated()), id: \.element.id) { i, q in
+                    if let label = weekLabel(i) {
+                        Text(label)
+                            .font(GameFont.display(10))
+                            .foregroundStyle(RPGTheme.cream)
+                            .outlined(RPGTheme.edgeDark, 0.8)
+                            .padding(.horizontal, 8).padding(.vertical, 4)
+                            .background(Capsule().fill(LinearGradient(colors: [Color(hex: "8A5A2A"), Color(hex: "5A3A1A")], startPoint: .top, endPoint: .bottom)))
+                            .overlay(Capsule().strokeBorder(RPGTheme.goldGradient, lineWidth: 1))
+                            .position(x: pts[i].x < width / 2 ? width - 56 : 56, y: pts[i].y + 4)
+                    }
+                }
+
+                // Узлы
+                ForEach(Array(quests.enumerated()), id: \.element.id) { i, q in
+                    Button { store.open(.quest(q.id)) } label: {
+                        TrailNode(quest: q, isCurrent: q.id == currentId, locked: store.state.isLocked(q), pulse: pulse)
+                    }
+                    .buttonStyle(.plain)
+                    .position(pts[i])
+                    .id(q.id)
+                }
+
+                // Точка А
+                VStack(spacing: 4) {
+                    Text("🚩").font(.system(size: 34))
+                    GameLabel(text: "Точка А · старт", size: 12, color: RPGTheme.gold)
+                    if let a = roadmap.pointA {
+                        Text(a).font(GameFont.body(11, .medium)).foregroundStyle(RPGTheme.muted).multilineTextAlignment(.center).lineLimit(3).frame(maxWidth: 260)
+                    }
+                }
+                .position(x: width / 2, y: height - 70)
+            }
+        }
+        .frame(height: height)
+    }
+
+    private var height: CGFloat { top + CGFloat(Swift.max(1, quests.count)) * step + bottomPad }
+
+    /// Точки узлов: первый квест внизу, последний вверху; змейка.
+    private func points(width: CGFloat) -> [CGPoint] {
+        let amp = width * 0.27
+        return quests.indices.map { i in
+            let y = height - bottomPad - CGFloat(i) * step
+            let x = width / 2 + amp * CGFloat(sin(Double(i) * 1.15))
+            return CGPoint(x: x, y: y)
+        }
+    }
+
+    private func weekLabel(_ i: Int) -> String? {
+        let seg = roadmap.days <= 120 ? 7 : 30
+        let d = (quests[i].day ?? 1) - 1
+        let cur = d / seg
+        let prev = i == 0 ? -1 : ((quests[i - 1].day ?? 1) - 1) / seg
+        guard cur != prev else { return nil }
+        return seg == 7 ? "НЕДЕЛЯ \(cur + 1)" : "МЕСЯЦ \(cur + 1)"
+    }
+}
+
+/// Узел-уровень на тропе.
+struct TrailNode: View {
+    @EnvironmentObject private var store: RPGStore
+    let quest: Quest
+    let isCurrent: Bool
+    let locked: Bool
+    let pulse: Bool
+
+    var body: some View {
+        let done = quest.isDone
+        let failed = quest.status == .failed
+        let size: CGFloat = quest.boss ? 84 : 66
+        VStack(spacing: 4) {
+            ZStack {
+                if isCurrent {
+                    Circle().fill(RPGTheme.cyan.opacity(0.35)).frame(width: size + 34, height: size + 34)
+                        .scaleEffect(pulse ? 1.12 : 0.9).opacity(pulse ? 0.25 : 0.7)
+                }
+                Circle().fill(Color.black.opacity(0.45)).frame(width: size, height: size).offset(y: 5)
+                Circle()
+                    .fill(nodeFill(done: done, failed: failed))
+                    .frame(width: size, height: size)
+                Circle().fill(LinearGradient(colors: [.white.opacity(0.5), .clear], startPoint: .top, endPoint: .center)).frame(width: size - 10, height: size - 10)
+                Circle().strokeBorder(quest.boss ? AnyShapeStyle(RPGTheme.bossGradient) : AnyShapeStyle(RPGTheme.goldGradient), lineWidth: quest.boss ? 5 : 4).frame(width: size, height: size)
+                nodeIcon(done: done, failed: failed)
+                if done {
+                    HStack(spacing: 1) {
+                        ForEach(0..<3, id: \.self) { _ in Image(systemName: "star.fill").font(.system(size: 11)).foregroundStyle(RPGTheme.gold).shadow(color: .black, radius: 0, y: 1) }
+                    }
+                    .offset(y: -size / 2 - 6)
+                }
+                if isCurrent {
+                    Image("AvatarLeopard").resizable().scaledToFit().frame(width: 46, height: 46)
+                        .clipShape(Circle())
+                        .overlay(Circle().strokeBorder(RPGTheme.goldGradient, lineWidth: 2))
+                        .offset(x: size / 2 + 8, y: -size / 2)
+                        .shadow(radius: 3)
+                }
+            }
+            if quest.boss { BossRibbon() }
+            Text(quest.title)
+                .font(GameFont.body(11, .heavy))
+                .foregroundStyle(RPGTheme.cream)
+                .outlined(RPGTheme.edgeDark, 0.9)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .frame(width: 150)
+        }
+        .opacity(locked && !done ? 0.75 : 1)
+    }
+
+    private func nodeFill(done: Bool, failed: Bool) -> RadialGradient {
+        let colors: [Color]
+        if done { colors = [Color(hex: "FFE48A"), Color(hex: "E09A20")] }
+        else if failed { colors = [Color(hex: "8A3A3A"), Color(hex: "3A1414")] }
+        else if quest.boss { colors = [Color(hex: "FF8A5A"), Color(hex: "9A1E10")] }
+        else if isCurrent { colors = [Color(hex: "9FF4FF"), Color(hex: "1F7BE0")] }
+        else if locked { colors = [Color(hex: "6A6480"), Color(hex: "2E2A40")] }
+        else { colors = [Color(hex: "B08CFF"), Color(hex: "4A2A9A")] }
+        return RadialGradient(colors: colors, center: .init(x: 0.4, y: 0.3), startRadius: 2, endRadius: 50)
+    }
+
+    @ViewBuilder
+    private func nodeIcon(done: Bool, failed: Bool) -> some View {
+        if done {
+            Image(systemName: "checkmark").font(.system(size: 28, weight: .black)).foregroundStyle(.white).shadow(color: Color(hex: "7A4A00"), radius: 0, y: 2)
+        } else if failed {
+            Image(systemName: "xmark").font(.system(size: 26, weight: .black)).foregroundStyle(.white.opacity(0.8))
+        } else if locked {
+            Image(systemName: "lock.fill").font(.system(size: 22, weight: .black)).foregroundStyle(.white.opacity(0.85))
+        } else if quest.boss {
+            Text("🔥").font(.system(size: 36))
         } else {
-            Text("🏁 Все квесты пройдены!").font(.headline).frame(maxWidth: .infinity)
-                .rpgCard(stroke: RPGTheme.ok, fill: AnyShapeStyle(RPGTheme.ok.opacity(0.12)))
+            Text(quest.day.map { "\($0)" } ?? "•")
+                .font(GameFont.display(22))
+                .foregroundStyle(.white)
+                .outlined(Color(hex: "1A0E50"), 1.4)
         }
-
-        if let a = rm.pointA {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("ТОЧКА А · День 1").font(.system(size: 13, weight: .bold))
-                Text(a).font(.system(size: 13)).foregroundStyle(RPGTheme.muted)
-            }
-            .padding(12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .overlay(RoundedRectangle(cornerRadius: 14).stroke(RPGTheme.violet, style: StrokeStyle(lineWidth: 1, dash: [5])))
-        }
-
-        timeline(rm, progress: pr)
-
-        Text("← листай карту → · нажми на карточку, чтобы выполнить квест")
-            .font(.footnote).foregroundStyle(RPGTheme.muted).frame(maxWidth: .infinity)
-        Button("＋ Добавить свой квест в карту") { addToMap = true }.buttonStyle(SecondaryButtonStyle())
-        Button("Удалить карту", role: .destructive) { confirmDelete = true }
-            .font(.system(size: 14, weight: .semibold)).foregroundStyle(RPGTheme.bad).frame(maxWidth: .infinity).padding(.top, 4)
-            .confirmationDialog("Удалить карту и её невыполненные квесты? Выполненные результаты и XP останутся.", isPresented: $confirmDelete, titleVisibility: .visible) {
-                Button("Удалить", role: .destructive) { store.deleteRoadmap(rm.id); selectedId = nil }
-            }
-    }
-
-    private func statBox(_ title: String, _ value: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title).font(.system(size: 11)).foregroundStyle(RPGTheme.muted).lineLimit(1)
-            Text(value).font(.system(size: 13.5, weight: .bold)).lineLimit(1).minimumScaleFactor(0.7)
-        }
-        .padding(8)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 12).fill(Color.black.opacity(0.25)))
-    }
-
-    private struct Segment: Identifiable {
-        let id: Int
-        let from: Int
-        let to: Int
-        var quests: [Quest]
-    }
-
-    private func timeline(_ rm: Roadmap, progress pr: RoadmapProgress) -> some View {
-        let segLen = rm.days <= 120 ? 7 : 30
-        let count = Swift.max(1, Int(ceil(Double(rm.days) / Double(segLen))))
-        var segs = (0..<count).map { i in Segment(id: i, from: i * segLen + 1, to: Swift.min(rm.days, (i + 1) * segLen), quests: []) }
-        for q in store.state.roadmapQuests(rm) {
-            let i = Swift.min(count - 1, Swift.max(0, ((q.day ?? 1) - 1) / segLen))
-            segs[i].quests.append(q)
-        }
-        let current = Swift.min(count - 1, (pr.day - 1) / segLen)
-        let finalSegs = segs
-        return ScrollViewReader { proxy in
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(alignment: .top, spacing: 10) {
-                    ForEach(finalSegs) { seg in
-                        VStack(alignment: .leading, spacing: 0) {
-                            HStack(alignment: .firstTextBaseline) {
-                                Text("\(segLen == 7 ? "Неделя" : "Месяц") \(seg.id + 1)")
-                                    .font(.system(size: 13, weight: .bold))
-                                    .foregroundStyle(seg.id == current ? RPGTheme.gold : RPGTheme.text)
-                                Spacer()
-                                Text("Дни \(seg.from)–\(seg.to)").font(.system(size: 11)).foregroundStyle(RPGTheme.muted)
-                            }
-                            dot(past: seg.id < current, now: seg.id == current)
-                            VStack(spacing: 8) {
-                                if seg.quests.isEmpty {
-                                    Text("—").foregroundStyle(RPGTheme.muted).frame(maxWidth: .infinity).padding(.vertical, 20)
-                                }
-                                ForEach(seg.quests) { q in
-                                    Button { openQuest = QuestRef(id: q.id) } label: { QuestCard(quest: q, compact: true, rmDay: pr.day) }
-                                        .buttonStyle(.plain)
-                                }
-                            }
-                        }
-                        .frame(width: 210)
-                        .id(seg.id)
-                    }
-                    VStack(alignment: .leading, spacing: 0) {
-                        HStack {
-                            Text("ТОЧКА Б").font(.system(size: 13, weight: .bold))
-                            Spacer()
-                            Text("День \(rm.days)").font(.system(size: 11)).foregroundStyle(RPGTheme.muted)
-                        }
-                        dot(past: false, now: false)
-                        VStack(alignment: .leading, spacing: 4) {
-                            if let b = rm.pointB {
-                                ForEach(b, id: \.self) { Text("✓ \($0)").font(.system(size: 13)) }
-                            } else {
-                                Text("🏆 \(rm.dream.isEmpty ? rm.title : rm.dream)").font(.system(size: 13))
-                            }
-                        }
-                        .rpgCard(padding: 12, stroke: RPGTheme.gold, fill: AnyShapeStyle(LinearGradient(colors: [RPGTheme.gold.opacity(0.15), RPGTheme.card], startPoint: .topLeading, endPoint: .bottomTrailing)))
-                    }
-                    .frame(width: 230)
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 6)
-            }
-            .padding(.horizontal, -16)
-            .onAppear { proxy.scrollTo(current, anchor: .leading) }
-            .onChange(of: rm.id) { _, _ in proxy.scrollTo(current, anchor: .leading) }
-        }
-        .padding(.top, 8)
-    }
-
-    private func dot(past: Bool, now: Bool) -> some View {
-        ZStack(alignment: .leading) {
-            Rectangle().fill(past ? RPGTheme.ok : RPGTheme.line).frame(height: 2).padding(.leading, -10)
-            Circle()
-                .fill(now ? RPGTheme.gold : (past ? RPGTheme.ok : RPGTheme.card2))
-                .frame(width: 14, height: 14)
-                .overlay(Circle().stroke(now ? Color(hex: "FFF3C4") : (past ? RPGTheme.ok : RPGTheme.line), lineWidth: 2))
-                .shadow(color: now ? RPGTheme.gold.opacity(0.6) : .clear, radius: 6)
-                .padding(.leading, 8)
-        }
-        .frame(height: 24)
     }
 }

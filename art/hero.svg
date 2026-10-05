@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1400" viewBox="0 0 600 700">
+  <defs>
+    <linearGradient id="fur" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbf9ff"/><stop offset="1" stop-color="#cfc8e4"/></linearGradient>
+    <linearGradient id="furSide" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#bdb4d8"/><stop offset=".35" stop-color="#f1eefa"/><stop offset=".65" stop-color="#f1eefa"/><stop offset="1" stop-color="#bdb4d8"/></linearGradient>
+    <radialGradient id="head" cx=".45" cy=".4" r=".65"><stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#ece8f7"/><stop offset="1" stop-color="#c4bcdc"/></radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0b0"/><stop offset=".45" stop-color="#f4c35a"/><stop offset="1" stop-color="#a86b14"/></linearGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#dfe6f5"/><stop offset="1" stop-color="#9aa6c4"/></linearGradient>
+    <linearGradient id="blade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#d9ecff"/><stop offset="1" stop-color="#8fb3e6"/></linearGradient>
+    <linearGradient id="plume" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7ff0ff"/><stop offset="1" stop-color="#2b78e4"/></linearGradient>
+    <linearGradient id="cape" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8b5cff"/><stop offset="1" stop-color="#4b23b8"/></linearGradient>
+    <radialGradient id="eye" cx=".45" cy=".4" r=".6"><stop offset="0" stop-color="#4fd1e0"/><stop offset=".55" stop-color="#1f5f8f"/><stop offset="1" stop-color="#101632"/></radialGradient>
+    <radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff6c8" stop-opacity=".9"/><stop offset="1" stop-color="#ffd76a" stop-opacity="0"/></radialGradient>
+    <filter id="sh" x="-60%" y="-60%" width="220%" height="220%"><feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#2a1050" flood-opacity=".45"/></filter>
+  </defs>
+
+  <!-- ground shadow -->
+  <ellipse cx="300" cy="668" rx="170" ry="20" fill="#1a0c33" opacity=".35"/>
+
+  <g filter="url(#sh)">
+  <!-- cape -->
+  <path d="M190 420 Q300 400 410 420 L440 640 Q300 680 160 640Z" fill="url(#cape)"/>
+  <path d="M160 640 Q300 680 440 640" fill="none" stroke="#f4c35a" stroke-width="7"/>
+
+  <!-- tail -->
+  <path d="M400 600 Q520 610 530 520 Q540 450 480 440 Q450 440 455 470 Q490 470 488 520 Q485 570 395 565Z" fill="url(#furSide)" stroke="#a79ccc" stroke-width="3"/>
+  <g fill="#4a4060"><ellipse cx="505" cy="500" rx="9" ry="6"/><ellipse cx="470" cy="452" rx="7" ry="5"/><ellipse cx="500" cy="560" rx="8" ry="5"/><ellipse cx="455" cy="585" rx="7" ry="5"/></g>
+
+  <!-- body -->
+  <ellipse cx="300" cy="520" rx="135" ry="135" fill="url(#furSide)"/>
+  <ellipse cx="300" cy="545" rx="85" ry="100" fill="#fbfaff"/>
+  <!-- body spots -->
+  <g fill="none" stroke="#5a5070" stroke-width="5" stroke-linecap="round">
+    <path d="M190 500 q8 -10 18 0"/><path d="M200 560 q8 -10 18 0"/><path d="M395 520 q8 -10 18 0"/><path d="M385 590 q8 -10 16 0"/>
+  </g>
+  <!-- belt -->
+  <path d="M170 520 Q300 560 430 520 L430 546 Q300 586 170 546Z" fill="#6a3a1e"/>
+  <rect x="282" y="540" width="36" height="30" rx="6" fill="url(#gold)" stroke="#8a5a12" stroke-width="3"/>
+
+  <!-- feet -->
+  <ellipse cx="240" cy="648" rx="52" ry="30" fill="url(#fur)" stroke="#b3aad0" stroke-width="3"/>
+  <ellipse cx="360" cy="648" rx="52" ry="30" fill="url(#fur)" stroke="#b3aad0" stroke-width="3"/>
+  <g fill="#f7b6c8"><ellipse cx="225" cy="652" rx="8" ry="6"/><ellipse cx="245" cy="656" rx="8" ry="6"/><ellipse cx="345" cy="656" rx="8" ry="6"/><ellipse cx="365" cy="652" rx="8" ry="6"/></g>
+
+  <!-- left arm (paw on hip) -->
+  <ellipse cx="410" cy="500" rx="40" ry="56" fill="url(#furSide)" transform="rotate(-25 410 500)" stroke="#b3aad0" stroke-width="3"/>
+
+  <!-- sword (behind right arm) -->
+  <g transform="rotate(-38 170 400)">
+    <circle cx="170" cy="200" r="70" fill="url(#glow)"/>
+    <path d="M158 120 L182 120 L184 370 L156 370Z" fill="url(#blade)" stroke="#7f9bd0" stroke-width="3"/>
+    <path d="M158 120 L170 80 L182 120Z" fill="url(#blade)" stroke="#7f9bd0" stroke-width="3"/>
+    <line x1="170" y1="100" x2="170" y2="360" stroke="#ffffff" stroke-width="3" opacity=".8"/>
+    <rect x="118" y="368" width="104" height="20" rx="10" fill="url(#gold)" stroke="#8a5a12" stroke-width="3"/>
+    <circle cx="170" cy="378" r="9" fill="#3fc1e0" stroke="#8a5a12" stroke-width="2"/>
+    <rect x="159" y="388" width="22" height="52" rx="6" fill="#6a3a1e"/>
+    <circle cx="170" cy="448" r="13" fill="url(#gold)" stroke="#8a5a12" stroke-width="3"/>
+  </g>
+  <!-- right arm raised holding sword -->
+  <ellipse cx="190" cy="455" rx="40" ry="62" fill="url(#furSide)" transform="rotate(35 190 455)" stroke="#b3aad0" stroke-width="3"/>
+  <circle cx="160" cy="410" r="30" fill="url(#fur)" stroke="#b3aad0" stroke-width="3"/>
+
+  <!-- head -->
+  <!-- ears -->
+  <path d="M150 170 Q140 80 210 105 Q190 140 150 170Z" fill="url(#fur)" stroke="#b3aad0" stroke-width="3"/>
+  <path d="M162 150 Q160 105 198 115 Q182 135 162 150Z" fill="#f7b6c8"/>
+  <path d="M450 170 Q460 80 390 105 Q410 140 450 170Z" fill="url(#fur)" stroke="#b3aad0" stroke-width="3"/>
+  <path d="M438 150 Q440 105 402 115 Q418 135 438 150Z" fill="#f7b6c8"/>
+  <ellipse cx="300" cy="270" rx="168" ry="150" fill="url(#head)" stroke="#b3aad0" stroke-width="3"/>
+  <!-- fluffy cheeks -->
+  <path d="M134 300 q-18 10 -6 26 q-14 12 4 24 M466 300 q18 10 6 26 q14 12 -4 24" fill="none" stroke="#b3aad0" stroke-width="3"/>
+  <!-- head spots -->
+  <g fill="#5a5070">
+    <ellipse cx="180" cy="235" rx="9" ry="7"/><ellipse cx="160" cy="265" rx="7" ry="6"/><ellipse cx="420" cy="235" rx="9" ry="7"/><ellipse cx="440" cy="265" rx="7" ry="6"/>
+    <ellipse cx="175" cy="300" rx="6" ry="5"/><ellipse cx="425" cy="300" rx="6" ry="5"/>
+  </g>
+
+  <!-- helmet -->
+  <path d="M140 230 Q150 110 300 100 Q450 110 460 230 Q380 205 300 205 Q220 205 140 230Z" fill="url(#steel)" stroke="#6f7aa0" stroke-width="4"/>
+  <path d="M140 230 Q220 205 300 205 Q380 205 460 230 L462 248 Q380 222 300 222 Q220 222 138 248Z" fill="url(#gold)" stroke="#8a5a12" stroke-width="3"/>
+  <path d="M300 100 L300 205" stroke="url(#gold)" stroke-width="16"/>
+  <path d="M300 100 L300 205" stroke="#8a5a12" stroke-width="2" opacity=".5"/>
+  <path d="M286 150 L300 128 L314 150 L300 172Z" fill="#3fc1e0" stroke="#8a5a12" stroke-width="3"/>
+  <!-- plume -->
+  <path d="M300 104 Q300 40 360 30 Q420 24 470 60 Q420 52 390 70 Q430 72 455 100 Q400 88 360 100 Q330 104 300 104Z" fill="url(#plume)" stroke="#1d5fb8" stroke-width="3"/>
+  <!-- helmet ear holes rims -->
+
+  <!-- eyes -->
+  <ellipse cx="235" cy="290" rx="40" ry="46" fill="url(#eye)"/>
+  <ellipse cx="365" cy="290" rx="40" ry="46" fill="url(#eye)"/>
+  <circle cx="222" cy="272" r="13" fill="#fff"/><circle cx="352" cy="272" r="13" fill="#fff"/>
+  <circle cx="250" cy="308" r="6" fill="#fff" opacity=".85"/><circle cx="380" cy="308" r="6" fill="#fff" opacity=".85"/>
+  <!-- blush -->
+  <ellipse cx="190" cy="342" rx="24" ry="12" fill="#ff9fc2" opacity=".55"/>
+  <ellipse cx="410" cy="342" rx="24" ry="12" fill="#ff9fc2" opacity=".55"/>
+  <!-- nose & mouth -->
+  <path d="M286 330 Q300 324 314 330 Q306 344 300 346 Q294 344 286 330Z" fill="#f08aa8" stroke="#c0607e" stroke-width="2"/>
+  <path d="M300 346 L300 356 M300 356 Q288 370 274 360 M300 356 Q312 370 326 360" fill="none" stroke="#5a4070" stroke-width="4" stroke-linecap="round"/>
+  <path d="M288 366 Q300 384 312 366Z" fill="#e8607e"/>
+  </g>
+</svg>

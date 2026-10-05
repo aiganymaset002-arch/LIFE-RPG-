@@ -2,6 +2,9 @@ name: iOS screenshots
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["LifeRPG/**", ".github/workflows/ios-screens.yml"]
 
 permissions:
   contents: write
@@ -31,6 +34,7 @@ jobs:
           shot() { xcrun simctl terminate "$DEV" kz.aiganym.liferpg || true; xcrun simctl launch "$DEV" kz.aiganym.liferpg "$@"; sleep 6; }
           xcrun simctl launch "$DEV" kz.aiganym.liferpg; sleep 6; xcrun simctl io "$DEV" screenshot screenshots/0-start.png
           for t in home map gm worlds profile; do shot -demo -tab $t; xcrun simctl io "$DEV" screenshot screenshots/demo-$t.png; done
+          for pnl in quest settings add; do shot -demo -tab home -panel $pnl; xcrun simctl io "$DEV" screenshot screenshots/panel-$pnl.png; done
       - name: Publish screenshots to branch
         run: |
           git config user.name "github-actions"; git config user.email "actions@github.com"

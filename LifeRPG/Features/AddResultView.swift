@@ -2,15 +2,14 @@
 //  AddResultView.swift
 //  LIFE RPG
 //
-//  Добавить реальный результат (XP по стандартной шкале или свои критерии) — сразу в несколько миров.
-//  Или новый квест в дорожную карту (день, Boss Battle).
+//  Панель «Новый результат»: XP по стандартной шкале или свои критерии, сразу в несколько миров,
+//  доказательство → Verified XP. Или новый квест в карту (день, Boss Battle).
 //
 
 import SwiftUI
 
 struct AddResultView: View {
     @EnvironmentObject private var store: RPGStore
-    @Environment(\.dismiss) private var dismiss
     var roadmapId: String? = nil
 
     @State private var title = ""
@@ -32,95 +31,111 @@ struct AddResultView: View {
     private var roadmap: Roadmap? { roadmapId.flatMap { id in store.state.roadmaps.first { $0.id == id } } }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(roadmapId == nil ? "Добавить реальный результат" : "Новый квест в карту").font(.title2.bold())
-                    RPGField(title: roadmapId == nil ? "Что сделано" : "Что нужно сделать", text: $title, placeholder: "Например: Сертификат Google Data Analytics")
+        OrnatePanel(title: roadmapId == nil ? "Новый результат" : "Новый квест", onClose: { store.panel = nil }) {
+            GameField(title: roadmapId == nil ? "Что сделано" : "Что нужно сделать", text: $title, placeholder: "Например: Сертификат Google Data Analytics")
 
-                    Text("Тип результата").font(.system(size: 13, weight: .semibold)).foregroundStyle(RPGTheme.muted)
-                    Picker("Тип результата", selection: $tierId) {
-                        ForEach(tiers) { t in Text("\(t.label) · +\(t.min)–\(t.max)").tag(t.id) }
-                        Text("⚙️ Свои критерии (не входит в Verified)").tag("custom")
-                    }
-                    .pickerStyle(.menu)
-                    .tint(RPGTheme.violet2)
-                    .onChange(of: tierId) { _, _ in if let t = currentTier { xp = Double(t.def) } }
+            SectionTitle(text: "Тип результата")
+            VStack(spacing: 6) {
+                ForEach(tiers) { t in tierRow(id: t.id, label: t.label, range: "+\(RPGFormat.xp(t.min))–\(RPGFormat.xp(t.max))") }
+                tierRow(id: "custom", label: "⚙️ Свои критерии (не входят в Verified)", range: "свой вес")
+            }
 
-                    if isCustom {
-                        RPGField(title: "XP (свой вес)", text: $customXP, keyboard: .numberPad)
-                    } else if let t = currentTier {
-                        HStack {
-                            Text("XP").font(.system(size: 13, weight: .semibold)).foregroundStyle(RPGTheme.muted)
-                            Spacer()
-                            Text("+\(RPGFormat.xp(Int(xp)))").font(.system(size: 17, weight: .heavy)).foregroundStyle(RPGTheme.gold)
-                        }
-                        Slider(value: $xp, in: Double(t.min)...Double(t.max), step: t.max - t.min >= 1000 ? 50 : 10)
-                            .tint(RPGTheme.gold)
-                    }
-
-                    Text("Какие миры прокачивает").font(.system(size: 13, weight: .semibold)).foregroundStyle(RPGTheme.muted).padding(.top, 4)
-                    ForEach(store.state.worlds) { w in worldRow(w) }
-                    Text("Основной мир получает XP со шкалы, остальные — сколько укажешь (по умолчанию половину).")
-                        .font(.footnote).foregroundStyle(RPGTheme.muted)
-
-                    if let rm = roadmap {
-                        Stepper("День карты: \(day)", value: $day, in: 1...rm.days)
-                        Toggle("🔥 Boss Battle", isOn: $boss).tint(RPGTheme.boss)
-                    } else if !isCustom {
-                        Text("Доказательство → Verified XP").font(.system(size: 13, weight: .semibold)).foregroundStyle(RPGTheme.muted)
-                        Picker("Тип доказательства", selection: $proofType) {
-                            ForEach(RPGData.proofTypes, id: \.self) { Text($0).tag($0) }
-                        }
-                        .pickerStyle(.menu)
-                        .tint(RPGTheme.violet2)
-                        RPGField(title: "", text: $proof, placeholder: "Ссылка / номер сертификата", keyboard: .URL)
-                    }
-
-                    Button(roadmapId == nil ? "✓ Начислить XP" : "Добавить квест", action: save)
-                        .buttonStyle(PrimaryButtonStyle(calm: store.calm))
-                        .padding(.top, 8)
+            if isCustom {
+                GameField(title: "XP (свой вес)", text: $customXP, keyboard: .numberPad)
+            } else if let t = currentTier {
+                HStack {
+                    Text("Награда").font(GameFont.body(13, .bold)).foregroundStyle(RPGTheme.muted)
+                    Spacer()
+                    GameLabel(text: "+\(RPGFormat.xp(Int(xp))) \(store.unit)", size: 22, color: RPGTheme.gold)
                 }
-                .padding(20)
+                Slider(value: $xp, in: Double(t.min)...Double(t.max), step: t.max - t.min >= 1000 ? 50 : 10)
+                    .tint(RPGTheme.gold)
             }
-            .scrollDismissesKeyboard(.interactively)
-            .background(RPGTheme.bg2.ignoresSafeArea())
-            .foregroundStyle(RPGTheme.text)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) { Button("Закрыть") { dismiss() }.foregroundStyle(RPGTheme.violet2) }
+
+            SectionTitle(text: "Какие миры прокачивает")
+            ForEach(store.state.worlds) { w in worldRow(w) }
+            Text("Основной мир получает XP со шкалы, остальные — сколько укажешь (по умолчанию половину).")
+                .font(GameFont.body(11.5, .medium)).foregroundStyle(RPGTheme.muted)
+
+            if let rm = roadmap {
+                InsetCard {
+                    Stepper(value: $day, in: 1...rm.days) {
+                        Text("День карты: \(day)").font(GameFont.body(15, .bold)).foregroundStyle(RPGTheme.cream)
+                    }
+                }
+                GameToggle(title: "🔥 Boss Battle", icon: "flame.fill", isOn: $boss)
+            } else if !isCustom {
+                SectionTitle(text: "Доказательство → Verified XP")
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(RPGData.proofTypes.filter { $0 != "Подтверждение родителя" }, id: \.self) { t in
+                            Button { proofType = t } label: { StoneChip(text: t, selected: proofType == t) }.buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.bottom, 3)
+                }
+                GameField(title: "", text: $proof, placeholder: "Ссылка / номер сертификата", keyboard: .URL)
             }
+
+            Button(roadmapId == nil ? "✓ Начислить XP" : "Добавить квест", action: save)
+                .buttonStyle(ChunkyButtonStyle(kind: store.calm ? .calm : .green, size: 21))
+                .padding(.top, 4)
         }
-        .presentationBackground(RPGTheme.bg2)
         .onAppear(perform: setup)
+    }
+
+    private func tierRow(id: String, label: String, range: String) -> some View {
+        Button {
+            tierId = id
+            if let t = RPGData.tier(id) { xp = Double(t.def) }
+        } label: {
+            HStack(spacing: 10) {
+                CheckStone(on: tierId == id)
+                Text(label).font(GameFont.body(13.5, .bold)).foregroundStyle(RPGTheme.cream).multilineTextAlignment(.leading)
+                Spacer()
+                Text(range).font(GameFont.display(11)).foregroundStyle(RPGTheme.gold)
+            }
+            .padding(8)
+            .background(RoundedRectangle(cornerRadius: 12).fill(tierId == id ? Color(hex: "4A3878") : Color(hex: "1A1032")))
+            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(tierId == id ? AnyShapeStyle(RPGTheme.goldGradient) : AnyShapeStyle(Color.black.opacity(0.5)), lineWidth: 1.5))
+        }
+        .buttonStyle(.plain)
     }
 
     private func worldRow(_ w: World) -> some View {
         let on = selected.contains(w.id)
         return VStack(alignment: .leading, spacing: 8) {
-            Toggle(isOn: Binding(get: { selected.contains(w.id) }, set: { v in if v { selected.insert(w.id) } else { selected.remove(w.id) } })) {
-                Text("\(w.emoji) \(w.name)\(w.id == mainWorld ? " · основной" : "")").font(.system(size: 14, weight: .semibold))
-            }
-            .tint(RPGTheme.gold)
-            if on {
-                HStack(spacing: 8) {
-                    Picker("Направление", selection: Binding(get: { cats[w.id] ?? w.type.categories[0] }, set: { cats[w.id] = $0 })) {
-                        ForEach(w.type.categories, id: \.self) { c in Text("\(RPGData.category(c).emoji) \(RPGData.category(c).label)").tag(c) }
-                    }
-                    .pickerStyle(.menu)
-                    .tint(RPGTheme.violet2)
+            Button {
+                if on { selected.remove(w.id) } else { selected.insert(w.id) }
+            } label: {
+                HStack(spacing: 10) {
+                    CheckStone(on: on)
+                    Text("\(w.emoji) \(w.name)").font(GameFont.body(14, .bold)).foregroundStyle(RPGTheme.cream)
+                    if w.id == mainWorld { Text("основной").font(GameFont.display(9)).foregroundStyle(RPGTheme.gold) }
                     Spacer()
-                    if w.id != mainWorld {
-                        TextField("XP", text: Binding(get: { extraXP[w.id] ?? "" }, set: { extraXP[w.id] = $0 }))
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 80)
-                            .padding(8)
-                            .background(RoundedRectangle(cornerRadius: 10).fill(RPGTheme.bg))
+                }
+            }
+            .buttonStyle(.plain)
+            if on {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(w.type.categories, id: \.self) { c in
+                            Button { cats[w.id] = c } label: {
+                                StoneChip(text: "\(RPGData.category(c).emoji) \(RPGData.category(c).label)", selected: (cats[w.id] ?? w.type.categories[0]) == c)
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
+                    .padding(.bottom, 3)
+                }
+                if w.id != mainWorld {
+                    GameField(title: "", text: Binding(get: { extraXP[w.id] ?? "" }, set: { extraXP[w.id] = $0 }), placeholder: "XP для этого мира (по умолчанию половина)", keyboard: .numberPad)
                 }
             }
         }
-        .rpgCard(padding: 10, stroke: on ? RPGTheme.gold.opacity(0.5) : RPGTheme.line)
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 12).fill(Color(hex: "1A1032").opacity(0.85)))
+        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(on ? RPGTheme.gold.opacity(0.6) : Color.black.opacity(0.5), lineWidth: 1.5))
     }
 
     private func setup() {
@@ -149,15 +164,13 @@ struct AddResultView: View {
             awards = [XPAward(worldId: w.id, cat: cats[w.id] ?? w.type.categories[0], xp: baseXP)]
         }
         let tier: String? = isCustom ? nil : tierId
+        store.panel = nil
         if let rm = roadmap {
             store.addQuest(Quest(title: t, tier: tier, custom: isCustom, awards: awards, boss: boss, roadmapId: rm.id, day: day, phase: "Мой квест"), to: rm.id)
         } else {
             let v = proof.trimmingCharacters(in: .whitespacesAndNewlines)
             let proofText = v.isEmpty ? "" : (v.hasPrefix(proofType) ? v : "\(proofType): \(v)")
-            dismiss()
             store.addResult(title: t, tier: tier, custom: isCustom, awards: awards, proof: proofText)
-            return
         }
-        dismiss()
     }
 }

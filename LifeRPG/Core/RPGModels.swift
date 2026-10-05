@@ -402,11 +402,14 @@ struct Profile: Codable, Hashable {
     var dream: String
     var createdAt: Date
     var demo: Bool
+    /// Аватар героя: AvatarLeopard / AvatarGirl / AvatarBoy.
+    var avatar: String?
 }
 
 struct GameSettings: Codable, Hashable {
     var calm: Bool
     var parentConfirm: Bool
+    var haptics: Bool?
 }
 
 struct GameState: Codable {

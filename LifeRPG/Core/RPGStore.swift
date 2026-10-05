@@ -26,12 +26,28 @@ struct RerouteEvent: Identifiable {
     let result: RerouteResult
 }
 
+/// Игровые всплывающие панели поверх экрана.
+enum GamePanel: Identifiable, Equatable {
+    case quest(String)
+    case add(String?)
+    case settings
+
+    var id: String {
+        switch self {
+        case .quest(let q): return "quest_" + q
+        case .add(let r): return "add_" + (r ?? "")
+        case .settings: return "settings"
+        }
+    }
+}
+
 @MainActor
 final class RPGStore: ObservableObject {
     @Published var state: GameState
     @Published var levelUp: LevelUpEvent?
     @Published var toast: ToastMessage?
     @Published var reroute: RerouteEvent?
+    @Published var panel: GamePanel?
 
     private let fileURL: URL
     private var toastQueue: [ToastMessage] = []
@@ -138,6 +154,7 @@ final class RPGStore: ObservableObject {
         if res.locked { show("🔒 Сначала выполни подготовительные квесты") }
         else if res.pending { show("⏳ Отправлено родителю на подтверждение") }
         else if res.ok && levelUp == nil { show("+\(RPGFormat.xp(res.xp)) \(unit)", xp: true) }
+        if res.ok && !res.pending && haptics { Haptics.success() }
     }
 
     func confirm(_ id: String) {
@@ -207,9 +224,9 @@ final class RPGStore: ObservableObject {
 
     /// Онбординг: создаёт игрока, миры и первую карту из мечты.
     @discardableResult
-    func startGame(name: String, age: Int?, location: String, mode: GameMode, dream: String, companyName: String) -> Roadmap {
+    func startGame(name: String, age: Int?, location: String, mode: GameMode, dream: String, companyName: String, avatar: String = "AvatarLeopard") -> Roadmap {
         var s = GameState()
-        s.profile = Profile(name: name.isEmpty ? "Игрок" : name, age: age, location: location, mode: mode, dream: dream, createdAt: Date(), demo: false)
+        s.profile = Profile(name: name.isEmpty ? "Игрок" : name, age: age, location: location, mode: mode, dream: dream, createdAt: Date(), demo: false, avatar: avatar)
         s.settings = GameSettings(calm: mode == .sen, parentConfirm: mode == .kids)
         let personal = s.addWorld(name: mode.isChild ? "Мой мир" : "Personal World", type: mode.isChild ? .kids : .personal)
         var main = personal
@@ -244,6 +261,11 @@ final class RPGStore: ObservableObject {
         saveNow()
     }
 
+    func setHaptics(_ on: Bool) {
+        state.settings.haptics = on
+        saveNow()
+    }
+
     func updateProfile(name: String, age: Int?, location: String, mode: GameMode, calm: Bool, parentConfirm: Bool) {
         guard var p = state.profile else { return }
         p.name = name.isEmpty ? p.name : name
@@ -251,12 +273,23 @@ final class RPGStore: ObservableObject {
         p.location = location
         p.mode = mode
         state.profile = p
-        state.settings = GameSettings(calm: calm, parentConfirm: parentConfirm)
+        state.settings = GameSettings(calm: calm, parentConfirm: parentConfirm, haptics: state.settings.haptics)
         saveNow()
         show("Сохранено")
     }
 
+    func setAvatar(_ name: String) {
+        guard state.profile != nil else { return }
+        state.profile?.avatar = name
+        saveNow()
+    }
+
+    func open(_ p: GamePanel) { panel = p }
+
     // MARK: Удобства для экранов
+
+    var avatar: String { state.profile?.avatar ?? (state.profile?.mode.isChild == true ? "AvatarLeopard" : "AvatarLeopard") }
+    var haptics: Bool { state.settings.haptics ?? true }
 
     var isKids: Bool { state.profile?.mode == .kids }
     var isSen: Bool { state.profile?.mode == .sen }

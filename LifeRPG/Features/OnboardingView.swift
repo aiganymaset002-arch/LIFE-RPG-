@@ -2,7 +2,8 @@
 //  OnboardingView.swift
 //  LIFE RPG
 //
-//  Старт: «Начать свою игру» или демо. Игрок, режим, мечта → AI Game Master строит первую карту.
+//  Заставка как в игре: сцена с героем, логотип, «ИГРАТЬ» / «Демо».
+//  Затем панель создания героя: аватар, имя, режим, мечта → Оракул строит первую карту.
 //
 
 import SwiftUI
@@ -18,88 +19,119 @@ struct OnboardingView: View {
     @State private var mode: GameMode = .life
     @State private var dream = ""
     @State private var company = ""
+    @State private var avatar = "AvatarLeopard"
+    @State private var shine = false
 
     var body: some View {
         ZStack {
-            RPGTheme.background
-            if step == 0 { hero } else { form }
+            GameBackground(dim: step == 0 ? 0 : 0.5)
+            if step == 0 {
+                Sparkles(count: 18)
+                HeroLayer()
+                splash
+            } else {
+                form
+            }
         }
-        .foregroundStyle(RPGTheme.text)
     }
 
-    private var hero: some View {
-        VStack(spacing: 16) {
-            Spacer()
-            Text("⚔️").font(.system(size: 64)).shadow(color: RPGTheme.gold.opacity(0.5), radius: 20)
-            Text("LIFE RPG")
-                .legendTitle(44)
-                .tracking(4)
-                .foregroundStyle(LinearGradient(colors: [Color(hex: "FFF6D6"), RPGTheme.gold], startPoint: .top, endPoint: .bottom))
-            Text("Твоя жизнь — твоя игра.\nПрокачивай себя к легенде.")
-                .font(.system(size: 18))
-                .multilineTextAlignment(.center)
-                .foregroundStyle(Color(hex: "D8D2FF"))
-            HStack(spacing: 6) {
-                ForEach(RPGData.personRanks) { RankBadge(id: $0.id, size: 32) }
+    private var splash: some View {
+        VStack(spacing: 10) {
+            VStack(spacing: 2) {
+                Text("LIFE RPG")
+                    .font(GameFont.display(54))
+                    .foregroundStyle(LinearGradient(colors: [Color(hex: "FFF6D6"), RPGTheme.gold, Color(hex: "F3A92E")], startPoint: .top, endPoint: .bottom))
+                    .outlined(Color(hex: "3A1A00"), 2.4)
+                    .shadow(color: RPGTheme.gold.opacity(shine ? 0.8 : 0.3), radius: 18)
+                Text("Твоя жизнь — твоя игра")
+                    .font(GameFont.title(20))
+                    .foregroundStyle(RPGTheme.cream)
+                    .outlined(RPGTheme.edgeDark, 1.2)
             }
-            .padding(.vertical, 6)
-            Text("XP начисляется только за реальные результаты — не за время в приложении.")
-                .font(.footnote)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(RPGTheme.muted)
+            .padding(.top, 50)
+            HStack(spacing: 4) {
+                ForEach(RPGData.personRanks) { RankShield(id: $0.id, size: 30) }
+            }
             Spacer()
-            Button("Начать свою игру") { withAnimation { step = 1 } }
-                .buttonStyle(PrimaryButtonStyle())
-            Button("Посмотреть демо: Айганым · Rank A") { store.loadDemo() }
-                .buttonStyle(SecondaryButtonStyle())
+            Text("XP — только за реальные результаты")
+                .font(GameFont.body(13, .bold)).foregroundStyle(RPGTheme.cream).outlined(RPGTheme.edgeDark, 1)
+            Button {
+                withAnimation { step = 1 }
+            } label: {
+                HStack(spacing: 10) { Text("Играть"); Image(systemName: "play.fill") }
+            }
+            .buttonStyle(ChunkyButtonStyle(kind: .cyan, size: 28, radius: 22))
+            Button("Демо: Айганым · Rank A") { store.loadDemo() }
+                .buttonStyle(ChunkyButtonStyle(kind: .purple, size: 16))
             Text("You don’t play a character. You build yourself.")
-                .font(.system(size: 13, design: .serif))
-                .foregroundStyle(RPGTheme.muted)
-                .padding(.top, 6)
+                .font(GameFont.title(13)).foregroundStyle(RPGTheme.muted).padding(.bottom, 6)
         }
-        .padding(24)
+        .padding(.horizontal, 22)
+        .onAppear { withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) { shine = true } }
     }
 
     private var form: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
-                Button { withAnimation { step = 0 } } label: { Label("Назад", systemImage: "chevron.left") }
-                    .foregroundStyle(RPGTheme.violet2)
-                Text("Создай игрока").font(.title.bold())
-                RPGField(title: "Имя", text: $name, placeholder: "Например, Айганым")
-                HStack(spacing: 10) {
-                    RPGField(title: "Возраст", text: $age, placeholder: "15", keyboard: .numberPad)
-                    RPGField(title: "Город", text: $location, placeholder: "Астана")
-                }
-                Text("Выбери режим").font(.headline).padding(.top, 6)
-                ForEach(GameMode.allCases) { m in
-                    Button { mode = m } label: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("\(m.emoji) \(m.label)").font(.system(size: 15, weight: .bold))
-                            Text(m.desc).font(.system(size: 12.5)).foregroundStyle(RPGTheme.muted).multilineTextAlignment(.leading)
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 14) {
+                ScreenHeader(title: "Новый герой") { withAnimation { step = 0 } }
+                OrnatePanel(title: "Выбери героя") {
+                    HStack(spacing: 10) {
+                        ForEach(["AvatarLeopard", "AvatarGirl", "AvatarBoy"], id: \.self) { a in
+                            Button { avatar = a } label: {
+                                VStack(spacing: 6) {
+                                    Image(a).resizable().scaledToFill().frame(width: 80, height: 80)
+                                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                                        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(avatar == a ? AnyShapeStyle(RPGTheme.goldGradient) : AnyShapeStyle(RPGTheme.edgeDark), lineWidth: avatar == a ? 4 : 2))
+                                    CheckStone(on: avatar == a)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                            .frame(maxWidth: .infinity)
                         }
-                        .rpgCard(padding: 12, stroke: mode == m ? RPGTheme.gold : RPGTheme.line,
-                                 fill: AnyShapeStyle(mode == m ? RPGTheme.gold.opacity(0.10) : RPGTheme.card))
                     }
-                    .buttonStyle(.plain)
+                    GameField(title: "Имя", text: $name, placeholder: "Например, Айганым")
+                    HStack(spacing: 10) {
+                        GameField(title: "Возраст", text: $age, placeholder: "15", keyboard: .numberPad)
+                        GameField(title: "Город", text: $location, placeholder: "Астана")
+                    }
                 }
-                Text(mode == .company ? "Компания и её большая цель" : "Твоя главная мечта").font(.headline).padding(.top, 6)
-                if mode == .company { RPGField(title: "Название компании", text: $company, placeholder: "MASHSTROY") }
-                RPGTextArea(title: "", text: $dream, placeholder: mode.isChild
-                            ? "Например: научиться читать и собрать свой робот"
-                            : "Например: Хочу поступить в топовый университет и стать AI/software engineer")
-                Text("AI Game Master превратит мечту в дорожную карту: квесты, Boss Battles, XP и уровни.")
-                    .font(.footnote).foregroundStyle(RPGTheme.muted)
-                Button("Создать игру ✨") {
-                    store.startGame(name: name.trimmingCharacters(in: .whitespaces), age: Int(age), location: location,
-                                    mode: mode, dream: dream.trimmingCharacters(in: .whitespacesAndNewlines),
-                                    companyName: company.trimmingCharacters(in: .whitespaces))
-                    onStart()
+                OrnatePanel(title: "Режим игры") {
+                    ForEach(GameMode.allCases) { m in
+                        Button { mode = m } label: {
+                            HStack(alignment: .top, spacing: 10) {
+                                Text(m.emoji).font(.system(size: 26))
+                                VStack(alignment: .leading, spacing: 3) {
+                                    GameLabel(text: m.label, size: 14, color: mode == m ? RPGTheme.gold : RPGTheme.cream)
+                                    Text(m.desc).font(GameFont.body(12, .medium)).foregroundStyle(RPGTheme.muted).multilineTextAlignment(.leading)
+                                }
+                                Spacer()
+                                CheckStone(on: mode == m)
+                            }
+                            .padding(10)
+                            .background(RoundedRectangle(cornerRadius: 12).fill(mode == m ? Color(hex: "4A3878") : Color(hex: "1A1032")))
+                            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(mode == m ? AnyShapeStyle(RPGTheme.goldGradient) : AnyShapeStyle(Color.black.opacity(0.5)), lineWidth: 1.5))
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
-                .buttonStyle(PrimaryButtonStyle())
-                .padding(.top, 6)
+                .padding(.top, 8)
+                OrnatePanel(title: mode == .company ? "Цель компании" : "Твоя мечта") {
+                    if mode == .company { GameField(title: "Название компании", text: $company, placeholder: "MASHSTROY") }
+                    GameField(title: "", text: $dream, placeholder: mode.isChild ? "Например: научиться читать и собрать свой робот" : "Например: Хочу поступить в топовый университет и стать AI/software engineer", multiline: true)
+                    Text("Оракул превратит мечту в дорожную карту: квесты, Boss Battles, XP и уровни.")
+                        .font(GameFont.body(12, .medium)).foregroundStyle(RPGTheme.muted)
+                    Button("Начать игру ▶") {
+                        store.startGame(name: name.trimmingCharacters(in: .whitespaces), age: Int(age), location: location, mode: mode,
+                                        dream: dream.trimmingCharacters(in: .whitespacesAndNewlines),
+                                        companyName: company.trimmingCharacters(in: .whitespaces), avatar: avatar)
+                        onStart()
+                    }
+                    .buttonStyle(ChunkyButtonStyle(kind: .cyan, size: 22))
+                }
+                .padding(.top, 8)
             }
-            .padding(20)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 30)
         }
         .scrollDismissesKeyboard(.interactively)
     }

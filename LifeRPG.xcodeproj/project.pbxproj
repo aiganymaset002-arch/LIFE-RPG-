@@ -15,16 +15,19 @@
 		F39BC0A2595F187617A91676 /* RPGTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BCAE5534EE72FB506448B39 /* RPGTheme.swift */; };
 		31DE3A6BD1DDEBF73E1B3185 /* AddResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9478461DF3110F31B286177B /* AddResultView.swift */; };
 		6FA9C6121965F24F2A0C979F /* GameMasterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7FDBBF62349D0CD8C2AA553 /* GameMasterView.swift */; };
+		F3A08E850E5FAA1FC05B08EA /* GameUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFBC6298C181169EA34BC241 /* GameUI.swift */; };
+		1199EA956F4FE6E61EEED5E5 /* GameViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA68FE44B8658B2796CE6D6 /* GameViews.swift */; };
 		964A605ADBB5EF431AB49F84 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64A1450A5BF231D68C5DB746 /* HomeView.swift */; };
 		2B853826E3187431880E51CC /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7C89018557F7BD1686093B /* MapView.swift */; };
 		5A7CF300A1A732EC892D3B1E /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2B801AAED71CC0698A8F1E4 /* OnboardingView.swift */; };
 		F06659D80902370797880A2C /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 267335BD5E119320240CFEC1 /* ProfileView.swift */; };
 		8C694BF728BD306EA3961487 /* QuestDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 703FA986782EC31519F31792 /* QuestDetailView.swift */; };
-		3D45326BD616024455FBDEE9 /* RPGComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66E3CD32F68F47BAA96A758A /* RPGComponents.swift */; };
 		BF8479C9560851585DB6D89F /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DF6072E2114F5AEBFD6B562 /* RootView.swift */; };
 		3762AF077432906C6B93269A /* WorldsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DADBD7430BE8081236A4996 /* WorldsView.swift */; };
 		04A7814E4EEC70DE7D6C41B1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8D562B3E40B6C9EC53F38F07 /* Assets.xcassets */; };
 		7E80ECB52890434CF074B07A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 44CEF992C8E65B612D921E81 /* PrivacyInfo.xcprivacy */; };
+		F111B140DB9B8FBA15EC405A /* Philosopher-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DF3627A1468F01325815F17D /* Philosopher-Bold.ttf */; };
+		B2173268FB25136FB3886C1A /* RussoOne-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9CCD8244DF1A045A880BC5D2 /* RussoOne-Regular.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,14 +40,17 @@
 		8BCAE5534EE72FB506448B39 /* RPGTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RPGTheme.swift"; sourceTree = "<group>"; };
 		9478461DF3110F31B286177B /* AddResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AddResultView.swift"; sourceTree = "<group>"; };
 		E7FDBBF62349D0CD8C2AA553 /* GameMasterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameMasterView.swift"; sourceTree = "<group>"; };
+		EFBC6298C181169EA34BC241 /* GameUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameUI.swift"; sourceTree = "<group>"; };
+		BAA68FE44B8658B2796CE6D6 /* GameViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameViews.swift"; sourceTree = "<group>"; };
 		64A1450A5BF231D68C5DB746 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HomeView.swift"; sourceTree = "<group>"; };
 		7D7C89018557F7BD1686093B /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MapView.swift"; sourceTree = "<group>"; };
 		D2B801AAED71CC0698A8F1E4 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OnboardingView.swift"; sourceTree = "<group>"; };
 		267335BD5E119320240CFEC1 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProfileView.swift"; sourceTree = "<group>"; };
 		703FA986782EC31519F31792 /* QuestDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "QuestDetailView.swift"; sourceTree = "<group>"; };
-		66E3CD32F68F47BAA96A758A /* RPGComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RPGComponents.swift"; sourceTree = "<group>"; };
 		2DF6072E2114F5AEBFD6B562 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RootView.swift"; sourceTree = "<group>"; };
 		5DADBD7430BE8081236A4996 /* WorldsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorldsView.swift"; sourceTree = "<group>"; };
+		DF3627A1468F01325815F17D /* Philosopher-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Philosopher-Bold.ttf"; sourceTree = "<group>"; };
+		9CCD8244DF1A045A880BC5D2 /* RussoOne-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "RussoOne-Regular.ttf"; sourceTree = "<group>"; };
 		8D562B3E40B6C9EC53F38F07 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		44CEF992C8E65B612D921E81 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		E5C235E98F32AFE9D971BA69 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
@@ -77,6 +83,7 @@
 				22EE43E5F9A80405E6DFEACD /* App */,
 				39173558B7F8BBD9119F85A1 /* Core */,
 				2E50D69C8052B9944A189A26 /* Features */,
+				245E38A9131F3D9B0B936200 /* Fonts */,
 				8D562B3E40B6C9EC53F38F07 /* Assets.xcassets */,
 			);
 			path = LifeRPG;
@@ -108,16 +115,26 @@
 			children = (
 				9478461DF3110F31B286177B /* AddResultView.swift */,
 				E7FDBBF62349D0CD8C2AA553 /* GameMasterView.swift */,
+				EFBC6298C181169EA34BC241 /* GameUI.swift */,
+				BAA68FE44B8658B2796CE6D6 /* GameViews.swift */,
 				64A1450A5BF231D68C5DB746 /* HomeView.swift */,
 				7D7C89018557F7BD1686093B /* MapView.swift */,
 				D2B801AAED71CC0698A8F1E4 /* OnboardingView.swift */,
 				267335BD5E119320240CFEC1 /* ProfileView.swift */,
 				703FA986782EC31519F31792 /* QuestDetailView.swift */,
-				66E3CD32F68F47BAA96A758A /* RPGComponents.swift */,
 				2DF6072E2114F5AEBFD6B562 /* RootView.swift */,
 				5DADBD7430BE8081236A4996 /* WorldsView.swift */,
 			);
 			path = Features;
+			sourceTree = "<group>";
+		};
+		245E38A9131F3D9B0B936200 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				DF3627A1468F01325815F17D /* Philosopher-Bold.ttf */,
+				9CCD8244DF1A045A880BC5D2 /* RussoOne-Regular.ttf */,
+			);
+			path = Fonts;
 			sourceTree = "<group>";
 		};
 		434990C8A25D2BE94863561A /* Supporting Files */ = {
@@ -198,6 +215,8 @@
 			files = (
 				04A7814E4EEC70DE7D6C41B1 /* Assets.xcassets in Resources */,
 				7E80ECB52890434CF074B07A /* PrivacyInfo.xcprivacy in Resources */,
+				F111B140DB9B8FBA15EC405A /* Philosopher-Bold.ttf in Resources */,
+				B2173268FB25136FB3886C1A /* RussoOne-Regular.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -217,12 +236,13 @@
 				F39BC0A2595F187617A91676 /* RPGTheme.swift in Sources */,
 				31DE3A6BD1DDEBF73E1B3185 /* AddResultView.swift in Sources */,
 				6FA9C6121965F24F2A0C979F /* GameMasterView.swift in Sources */,
+				F3A08E850E5FAA1FC05B08EA /* GameUI.swift in Sources */,
+				1199EA956F4FE6E61EEED5E5 /* GameViews.swift in Sources */,
 				964A605ADBB5EF431AB49F84 /* HomeView.swift in Sources */,
 				2B853826E3187431880E51CC /* MapView.swift in Sources */,
 				5A7CF300A1A732EC892D3B1E /* OnboardingView.swift in Sources */,
 				F06659D80902370797880A2C /* ProfileView.swift in Sources */,
 				8C694BF728BD306EA3961487 /* QuestDetailView.swift in Sources */,
-				3D45326BD616024455FBDEE9 /* RPGComponents.swift in Sources */,
 				BF8479C9560851585DB6D89F /* RootView.swift in Sources */,
 				3762AF077432906C6B93269A /* WorldsView.swift in Sources */,
 			);

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 300 300">
+  <defs>
+    <radialGradient id="skin" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#ffe9dc"/><stop offset="1" stop-color="#f2c6ae"/></radialGradient>
+    <linearGradient id="hair" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2a4a"/><stop offset="1" stop-color="#1a1226"/></linearGradient>
+    <radialGradient id="eye" cx=".45" cy=".4" r=".6"><stop offset="0" stop-color="#8a5a3a"/><stop offset=".6" stop-color="#3a2216"/><stop offset="1" stop-color="#140c08"/></radialGradient>
+    <linearGradient id="top" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b07cff"/><stop offset="1" stop-color="#6b3df0"/></linearGradient>
+  </defs>
+  <path d="M60 300 Q60 220 150 215 Q240 220 240 300Z" fill="url(#top)"/>
+  <path d="M120 300 L150 240 L180 300" fill="#f4c35a" opacity=".9"/>
+  <path d="M52 140 Q50 60 150 52 Q250 60 248 140 L252 250 Q230 270 210 250 L90 250 Q70 270 48 250Z" fill="url(#hair)"/>
+  <rect x="135" y="190" width="30" height="34" fill="#f2c6ae"/>
+  <ellipse cx="150" cy="140" rx="82" ry="86" fill="url(#skin)"/>
+  <path d="M68 128 Q80 62 150 58 Q222 62 232 128 Q200 96 170 100 Q160 82 150 100 Q110 92 68 128Z" fill="url(#hair)"/>
+  <ellipse cx="118" cy="148" rx="17" ry="21" fill="url(#eye)"/><ellipse cx="182" cy="148" rx="17" ry="21" fill="url(#eye)"/>
+  <circle cx="112" cy="140" r="6" fill="#fff"/><circle cx="176" cy="140" r="6" fill="#fff"/>
+  <path d="M100 128 q18 -10 34 0 M166 128 q18 -10 34 0" stroke="#1a1226" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <ellipse cx="96" cy="176" rx="13" ry="7" fill="#ff9fb0" opacity=".6"/><ellipse cx="204" cy="176" rx="13" ry="7" fill="#ff9fb0" opacity=".6"/>
+  <path d="M138 186 Q150 198 162 186" stroke="#b04a5a" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <!-- crown -->
+  <path d="M110 70 L122 40 L138 62 L150 30 L162 62 L178 40 L190 70Z" fill="#f4c35a" stroke="#8a5a12" stroke-width="3"/>
+  <circle cx="150" cy="54" r="6" fill="#3fc1e0"/>
+</svg>
