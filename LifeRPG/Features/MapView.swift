@@ -206,7 +206,6 @@ struct TrailView: View {
                         TrailNode(quest: q, isCurrent: q.id == currentId, locked: store.state.isLocked(q), pulse: pulse)
                     }
                     .buttonStyle(.plain)
-                    .id(q.id)
                     .position(pts[i])
                 }
 
@@ -222,6 +221,18 @@ struct TrailView: View {
             }
         }
         .frame(height: height)
+        .overlay(alignment: .top) { anchors }
+    }
+
+    /// Невидимые якоря на высоте каждого узла — для прокрутки к текущему квесту.
+    private var anchors: some View {
+        VStack(spacing: 0) {
+            Color.clear.frame(height: top + step / 2)
+            ForEach(quests.reversed()) { q in
+                Color.clear.frame(height: step).id(q.id)
+            }
+        }
+        .allowsHitTesting(false)
     }
 
     private var height: CGFloat { top + CGFloat(Swift.max(1, quests.count)) * step + bottomPad }
