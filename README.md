@@ -18,18 +18,24 @@ LIFE RPG — мобильное приложение для геймификац
 
 При каждом изменении GitHub Actions собирает приложение на Mac и прогоняет проверки игрового ядра (вкладка **Actions → iOS app**).
 
-| Старт | Главная | Карта 90 дней |
+| Старт | Лобби | Карта-тропа 90 дней |
 |---|---|---|
 | ![](docs/screenshots/0-start.png) | ![](docs/screenshots/demo-home.png) | ![](docs/screenshots/demo-map.png) |
-| **Game Master** | **Миры** | **Профиль** |
+| **Оракул (Game Master)** | **Миры** | **Герой** |
 | ![](docs/screenshots/demo-gm.png) | ![](docs/screenshots/demo-worlds.png) | ![](docs/screenshots/demo-profile.png) |
+| **Квест** | **Настройки** | **Новый результат** |
+| ![](docs/screenshots/panel-quest.png) | ![](docs/screenshots/panel-settings.png) | ![](docs/screenshots/panel-add.png) |
+
+Дизайн — игровой: сумеречная фэнтези-сцена, свой маскот (снежный барс-рыцарь), медальоны в золотых кольцах, «3D»-кнопки, резные каменные панели, карта-тропа с узлами-уровнями и боссами. Шрифты Russo One и Philosopher (SIL OFL, с кириллицей) лежат в `LifeRPG/Fonts`, исходники иллюстраций — в `art/` (SVG).
 
 ```
 LifeRPG.xcodeproj        проект Xcode — откройте его и нажмите Run
 LifeRPG/App              точка входа приложения
 LifeRPG/Core             модели, игровое ядро, AI Game Master, демо, хранилище, тема
 LifeRPG/Features         экраны: онбординг, главная (Kids/SEN), карта, квест, Game Master, миры, профиль, ранги
-LifeRPG/Assets.xcassets  иконка приложения
+LifeRPG/Assets.xcassets  иконка, фон-лобби, герой, аватары
+LifeRPG/Fonts            игровые шрифты (OFL)
+art/                     исходники иллюстраций (SVG)
 Tests/CoreCheck          проверки игрового ядра
 scripts/gen_xcodeproj.py пересобрать проект после добавления новых .swift файлов
 ```

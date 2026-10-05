@@ -206,8 +206,8 @@ struct TrailView: View {
                         TrailNode(quest: q, isCurrent: q.id == currentId, locked: store.state.isLocked(q), pulse: pulse)
                     }
                     .buttonStyle(.plain)
-                    .position(pts[i])
                     .id(q.id)
+                    .position(pts[i])
                 }
 
                 // Точка А
