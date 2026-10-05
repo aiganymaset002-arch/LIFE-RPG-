@@ -45,6 +45,8 @@ final class RPGStore: ObservableObject {
         } else {
             state = GameState()
         }
+        // Для скриншотов и проверки: запуск с аргументом -demo открывает демо-игру.
+        if ProcessInfo.processInfo.arguments.contains("-demo") { state = RPGSeed.demo() }
     }
 
     // MARK: Сохранение

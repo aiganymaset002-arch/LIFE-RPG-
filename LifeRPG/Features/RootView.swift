@@ -13,8 +13,20 @@ enum RPGTab: Hashable {
 
 struct RootView: View {
     @EnvironmentObject private var store: RPGStore
-    @State private var tab: RPGTab = .home
-    @State private var openQuest: Quest?
+    @State private var tab: RPGTab = RootView.launchTab()
+
+    /// Аргумент запуска «-tab map|gm|worlds|profile» (для скриншотов).
+    private static func launchTab() -> RPGTab {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-tab"), i + 1 < args.count else { return .home }
+        switch args[i + 1] {
+        case "map": return .map
+        case "gm": return .gm
+        case "worlds": return .worlds
+        case "profile": return .profile
+        default: return .home
+        }
+    }
 
     var body: some View {
         ZStack(alignment: .top) {

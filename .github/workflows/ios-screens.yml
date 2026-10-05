@@ -1,0 +1,45 @@
+name: iOS screenshots
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["LifeRPG/**", ".github/workflows/ios-screens.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  screens:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode_16*.app | sort -V | tail -1)"
+      - name: Build for simulator
+        run: |
+          set -o pipefail
+          xcodebuild -project LifeRPG.xcodeproj -scheme LifeRPG -configuration Debug -sdk iphonesimulator \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO build | tail -3
+      - name: Take screenshots on iPhone
+        run: |
+          DEV=$(xcrun simctl list devices available | grep -E "iPhone 1[5-7]( Pro)? \(" | head -1 | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')
+          echo "Device: $DEV"
+          xcrun simctl boot "$DEV"
+          xcrun simctl bootstatus "$DEV" -b
+          xcrun simctl status_bar "$DEV" override --time 9:41 --batteryState charged --batteryLevel 100 || true
+          APP=build/Build/Products/Debug-iphonesimulator/LifeRPG.app
+          xcrun simctl install "$DEV" "$APP"
+          mkdir -p screenshots
+          shot() { xcrun simctl terminate "$DEV" kz.aiganym.liferpg || true; xcrun simctl launch "$DEV" kz.aiganym.liferpg "$@"; sleep 6; }
+          xcrun simctl launch "$DEV" kz.aiganym.liferpg; sleep 6; xcrun simctl io "$DEV" screenshot screenshots/0-start.png
+          for t in home map gm worlds profile; do shot -demo -tab $t; xcrun simctl io "$DEV" screenshot screenshots/demo-$t.png; done
+      - name: Publish screenshots to branch
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git fetch origin ci-screenshots || true
+          git checkout --orphan ci-screenshots-tmp
+          git rm -rf --cached . >/dev/null
+          git add screenshots
+          git commit -m "iOS screenshots $GITHUB_SHA"
+          git push -f origin HEAD:ci-screenshots
