@@ -1,0 +1,383 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+/* Begin PBXBuildFile section */
+		F9C385BB032F95CC931B7082 /* LifeRPGApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DBB6BA8AC8181BDE33BE81B /* LifeRPGApp.swift */; };
+		52713767A12D4332437E9A5E /* GameMaster.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27056FFE8B897625464988 /* GameMaster.swift */; };
+		6C3E5C0958E5BDA8ACA3969B /* RPGEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD8F673F5670C364E8C8F111 /* RPGEngine.swift */; };
+		9B0704658B5A8AEA13E1B67A /* RPGModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DB6C42E4DBB533DD885A02B /* RPGModels.swift */; };
+		B9A68CB039F42813CB6B9A7B /* RPGSeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE1DB952EF3AB903249FFE41 /* RPGSeed.swift */; };
+		EC2ED5C38CDDB03C248D6E24 /* RPGStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5FC90D052FEB6DCB79E67D8 /* RPGStore.swift */; };
+		F39BC0A2595F187617A91676 /* RPGTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BCAE5534EE72FB506448B39 /* RPGTheme.swift */; };
+		31DE3A6BD1DDEBF73E1B3185 /* AddResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9478461DF3110F31B286177B /* AddResultView.swift */; };
+		6FA9C6121965F24F2A0C979F /* GameMasterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7FDBBF62349D0CD8C2AA553 /* GameMasterView.swift */; };
+		964A605ADBB5EF431AB49F84 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64A1450A5BF231D68C5DB746 /* HomeView.swift */; };
+		2B853826E3187431880E51CC /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7C89018557F7BD1686093B /* MapView.swift */; };
+		5A7CF300A1A732EC892D3B1E /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2B801AAED71CC0698A8F1E4 /* OnboardingView.swift */; };
+		F06659D80902370797880A2C /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 267335BD5E119320240CFEC1 /* ProfileView.swift */; };
+		8C694BF728BD306EA3961487 /* QuestDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 703FA986782EC31519F31792 /* QuestDetailView.swift */; };
+		3D45326BD616024455FBDEE9 /* RPGComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66E3CD32F68F47BAA96A758A /* RPGComponents.swift */; };
+		BF8479C9560851585DB6D89F /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DF6072E2114F5AEBFD6B562 /* RootView.swift */; };
+		3762AF077432906C6B93269A /* WorldsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DADBD7430BE8081236A4996 /* WorldsView.swift */; };
+		04A7814E4EEC70DE7D6C41B1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8D562B3E40B6C9EC53F38F07 /* Assets.xcassets */; };
+		7E80ECB52890434CF074B07A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 44CEF992C8E65B612D921E81 /* PrivacyInfo.xcprivacy */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		1DBB6BA8AC8181BDE33BE81B /* LifeRPGApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LifeRPGApp.swift"; sourceTree = "<group>"; };
+		0A27056FFE8B897625464988 /* GameMaster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameMaster.swift"; sourceTree = "<group>"; };
+		CD8F673F5670C364E8C8F111 /* RPGEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RPGEngine.swift"; sourceTree = "<group>"; };
+		9DB6C42E4DBB533DD885A02B /* RPGModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RPGModels.swift"; sourceTree = "<group>"; };
+		EE1DB952EF3AB903249FFE41 /* RPGSeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RPGSeed.swift"; sourceTree = "<group>"; };
+		F5FC90D052FEB6DCB79E67D8 /* RPGStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RPGStore.swift"; sourceTree = "<group>"; };
+		8BCAE5534EE72FB506448B39 /* RPGTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RPGTheme.swift"; sourceTree = "<group>"; };
+		9478461DF3110F31B286177B /* AddResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AddResultView.swift"; sourceTree = "<group>"; };
+		E7FDBBF62349D0CD8C2AA553 /* GameMasterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameMasterView.swift"; sourceTree = "<group>"; };
+		64A1450A5BF231D68C5DB746 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HomeView.swift"; sourceTree = "<group>"; };
+		7D7C89018557F7BD1686093B /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MapView.swift"; sourceTree = "<group>"; };
+		D2B801AAED71CC0698A8F1E4 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OnboardingView.swift"; sourceTree = "<group>"; };
+		267335BD5E119320240CFEC1 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProfileView.swift"; sourceTree = "<group>"; };
+		703FA986782EC31519F31792 /* QuestDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "QuestDetailView.swift"; sourceTree = "<group>"; };
+		66E3CD32F68F47BAA96A758A /* RPGComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RPGComponents.swift"; sourceTree = "<group>"; };
+		2DF6072E2114F5AEBFD6B562 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RootView.swift"; sourceTree = "<group>"; };
+		5DADBD7430BE8081236A4996 /* WorldsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorldsView.swift"; sourceTree = "<group>"; };
+		8D562B3E40B6C9EC53F38F07 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		44CEF992C8E65B612D921E81 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		E5C235E98F32AFE9D971BA69 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		F5BF48AA40CAD7891EB709FC /* LifeRPG.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "LifeRPG.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4F6F5CC3FCCF73F75AE9CCF4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		FAD58DE7366495DB4650CFEF /* Main */ = {
+			isa = PBXGroup;
+			children = (
+				095FEE2E633C50D24407F2D6 /* LifeRPG */,
+				434990C8A25D2BE94863561A /* Supporting Files */,
+				86024CAD1E83101D97359D73 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		095FEE2E633C50D24407F2D6 /* LifeRPG */ = {
+			isa = PBXGroup;
+			children = (
+				22EE43E5F9A80405E6DFEACD /* App */,
+				39173558B7F8BBD9119F85A1 /* Core */,
+				2E50D69C8052B9944A189A26 /* Features */,
+				8D562B3E40B6C9EC53F38F07 /* Assets.xcassets */,
+			);
+			path = LifeRPG;
+			sourceTree = "<group>";
+		};
+		22EE43E5F9A80405E6DFEACD /* App */ = {
+			isa = PBXGroup;
+			children = (
+				1DBB6BA8AC8181BDE33BE81B /* LifeRPGApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		39173558B7F8BBD9119F85A1 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				0A27056FFE8B897625464988 /* GameMaster.swift */,
+				CD8F673F5670C364E8C8F111 /* RPGEngine.swift */,
+				9DB6C42E4DBB533DD885A02B /* RPGModels.swift */,
+				EE1DB952EF3AB903249FFE41 /* RPGSeed.swift */,
+				F5FC90D052FEB6DCB79E67D8 /* RPGStore.swift */,
+				8BCAE5534EE72FB506448B39 /* RPGTheme.swift */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		2E50D69C8052B9944A189A26 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				9478461DF3110F31B286177B /* AddResultView.swift */,
+				E7FDBBF62349D0CD8C2AA553 /* GameMasterView.swift */,
+				64A1450A5BF231D68C5DB746 /* HomeView.swift */,
+				7D7C89018557F7BD1686093B /* MapView.swift */,
+				D2B801AAED71CC0698A8F1E4 /* OnboardingView.swift */,
+				267335BD5E119320240CFEC1 /* ProfileView.swift */,
+				703FA986782EC31519F31792 /* QuestDetailView.swift */,
+				66E3CD32F68F47BAA96A758A /* RPGComponents.swift */,
+				2DF6072E2114F5AEBFD6B562 /* RootView.swift */,
+				5DADBD7430BE8081236A4996 /* WorldsView.swift */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		434990C8A25D2BE94863561A /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				44CEF992C8E65B612D921E81 /* PrivacyInfo.xcprivacy */,
+				E5C235E98F32AFE9D971BA69 /* README.md */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		86024CAD1E83101D97359D73 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F5BF48AA40CAD7891EB709FC /* LifeRPG.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		42AEFBAE01D2DFD981F7DA7D /* LifeRPG */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DC4A6C9F34D975359745942D /* Build configuration list for PBXNativeTarget "LifeRPG" */;
+			buildPhases = (
+				F2AB5FB218DA8B84623F4557 /* Sources */,
+				4F6F5CC3FCCF73F75AE9CCF4 /* Frameworks */,
+				55B558C7EF820E6E00E5993B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LifeRPG;
+			productName = LifeRPG;
+			productReference = F5BF48AA40CAD7891EB709FC /* LifeRPG.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		46F86FAA6BBF9AC94A7E4595 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					42AEFBAE01D2DFD981F7DA7D = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = BD44C8D3D68438F516D2FB8A /* Build configuration list for PBXProject "LifeRPG" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = ru;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				ru,
+				en,
+				Base,
+			);
+			mainGroup = FAD58DE7366495DB4650CFEF;
+			productRefGroup = 86024CAD1E83101D97359D73 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				42AEFBAE01D2DFD981F7DA7D /* LifeRPG */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		55B558C7EF820E6E00E5993B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				04A7814E4EEC70DE7D6C41B1 /* Assets.xcassets in Resources */,
+				7E80ECB52890434CF074B07A /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F2AB5FB218DA8B84623F4557 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F9C385BB032F95CC931B7082 /* LifeRPGApp.swift in Sources */,
+				52713767A12D4332437E9A5E /* GameMaster.swift in Sources */,
+				6C3E5C0958E5BDA8ACA3969B /* RPGEngine.swift in Sources */,
+				9B0704658B5A8AEA13E1B67A /* RPGModels.swift in Sources */,
+				B9A68CB039F42813CB6B9A7B /* RPGSeed.swift in Sources */,
+				EC2ED5C38CDDB03C248D6E24 /* RPGStore.swift in Sources */,
+				F39BC0A2595F187617A91676 /* RPGTheme.swift in Sources */,
+				31DE3A6BD1DDEBF73E1B3185 /* AddResultView.swift in Sources */,
+				6FA9C6121965F24F2A0C979F /* GameMasterView.swift in Sources */,
+				964A605ADBB5EF431AB49F84 /* HomeView.swift in Sources */,
+				2B853826E3187431880E51CC /* MapView.swift in Sources */,
+				5A7CF300A1A732EC892D3B1E /* OnboardingView.swift in Sources */,
+				F06659D80902370797880A2C /* ProfileView.swift in Sources */,
+				8C694BF728BD306EA3961487 /* QuestDetailView.swift in Sources */,
+				3D45326BD616024455FBDEE9 /* RPGComponents.swift in Sources */,
+				BF8479C9560851585DB6D89F /* RootView.swift in Sources */,
+				3762AF077432906C6B93269A /* WorldsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		EC86DC4F4B4C60C3EC031655 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		7BF40F069D95C38DE60AA602 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		8CBC338D09B9279147FBD852 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "LIFE RPG";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleLightContent;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = kz.aiganym.liferpg;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C286FC8B91125F435CB47F15 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "LIFE RPG";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleLightContent;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = kz.aiganym.liferpg;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		BD44C8D3D68438F516D2FB8A /* Build configuration list for PBXProject "LifeRPG" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EC86DC4F4B4C60C3EC031655 /* Debug */,
+				7BF40F069D95C38DE60AA602 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DC4A6C9F34D975359745942D /* Build configuration list for PBXNativeTarget "LifeRPG" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8CBC338D09B9279147FBD852 /* Debug */,
+				C286FC8B91125F435CB47F15 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 46F86FAA6BBF9AC94A7E4595 /* Project object */;
+}
